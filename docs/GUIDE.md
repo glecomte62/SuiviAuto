@@ -13,17 +13,18 @@ SuiviAuto vous aide à suivre l'entretien de vos voitures sur Mac. Vous y rangez
 3. [Ajouter une voiture](#3-ajouter-une-voiture)
 4. [Les interventions : entretiens, réparations, CT](#4-les-interventions--entretiens-réparations-ct)
 5. [Factures et devis (documents)](#5-factures-et-devis-documents)
-6. [Le kilométrage](#6-le-kilométrage)
-7. [Les règles d'entretien](#7-les-règles-dentretien)
-8. [Le contrôle technique](#8-le-contrôle-technique)
-9. [Les échéances libres (assurance, pneus…)](#9-les-échéances-libres-assurance-pneus)
-10. [Les garages et leurs contacts](#10-les-garages-et-leurs-contacts)
-11. [Le tableau de bord](#11-le-tableau-de-bord)
-12. [Les rappels (notifications)](#12-les-rappels-notifications)
-13. [Sauvegarder, restaurer, exporter](#13-sauvegarder-restaurer-exporter)
-14. [Raccourcis clavier](#14-raccourcis-clavier)
-15. [Questions fréquentes et dépannage](#15-questions-fréquentes-et-dépannage)
-16. [Signaler un problème, proposer une idée](#16-signaler-un-problème-proposer-une-idée)
+6. [Le carnet d'entretien](#6-le-carnet-dentretien)
+7. [Le kilométrage](#7-le-kilométrage)
+8. [Les règles d'entretien](#8-les-règles-dentretien)
+9. [Le contrôle technique](#9-le-contrôle-technique)
+10. [Les échéances (assurance, pneus, courroie…)](#10-les-échéances-assurance-pneus-courroie)
+11. [Les garages et leurs contacts](#11-les-garages-et-leurs-contacts)
+12. [Le tableau de bord](#12-le-tableau-de-bord)
+13. [Les rappels (notifications)](#13-les-rappels-notifications)
+14. [Sauvegarder, restaurer, exporter](#14-sauvegarder-restaurer-exporter)
+15. [Raccourcis clavier](#15-raccourcis-clavier)
+16. [Questions fréquentes et dépannage](#16-questions-fréquentes-et-dépannage)
+17. [Signaler un problème, proposer une idée](#17-signaler-un-problème-proposer-une-idée)
 
 ---
 
@@ -58,8 +59,8 @@ La fenêtre est divisée en **trois colonnes** :
 
 | Colonne | Contenu |
 |---|---|
-| **À gauche** (barre latérale) | **Tableau de bord** en haut, puis **Mes voitures**, puis **Garages**. Chaque voiture a sa photo ou sa pastille de couleur. Une icône orange ⏰ ou rouge ⚠️ signale une échéance proche ou dépassée. Le bouton **+** ajoute une voiture ; le **+** de la section **Garages** ajoute un garage (voir [§ 10](#10-les-garages-et-leurs-contacts)). |
-| **Au milieu** | Le contenu de la voiture choisie, réparti en onglets : **Interventions · Km · Règles · Échéances · Infos**. Pour le tableau de bord : la liste des prochaines échéances. Pour un garage : sa fiche. |
+| **À gauche** (barre latérale) | **Tableau de bord** en haut, puis **Mes voitures**, puis **Garages**. Chaque voiture a sa photo (en entier, dans un carré arrondi) ou sa pastille de couleur. Une icône orange ⏰ ou rouge ⚠️ signale une échéance proche ou dépassée. Le bouton **+** ajoute une voiture ; le **+** de la section **Garages** ajoute un garage (voir [§ 11](#11-les-garages-et-leurs-contacts)). |
+| **Au milieu** | Le contenu de la voiture choisie, réparti en onglets : **Interventions · Carnet · Km · Règles · Échéances · Infos**. Pour le tableau de bord : la liste des prochaines échéances. Pour un garage : sa fiche. |
 | **À droite** (détail) | La fiche de l'intervention sélectionnée. Si aucune intervention n'est sélectionnée : le résumé de la voiture. Pour le tableau de bord : les graphiques. Pour un garage : son historique. |
 
 ### Les couleurs des badges
@@ -80,13 +81,13 @@ Cliquez sur **+** dans la barre latérale ou utilisez **⇧⌘N** (menu Fichier 
 
 | Champ | Utilité |
 |---|---|
-| **Photo** | **Choisir une photo…** ou glissez une image sur le cercle. Elle est réduite automatiquement. **Retirer la photo** l'enlève. |
+| **Photo** | **Choisir une photo…** ou glissez une image sur le cadre. La photo est affichée **en entier**, sans rognage, et réduite automatiquement. **Retirer la photo** l'enlève. |
 | **Couleur** | Couleur d'accent de la voiture dans toute l'app (pastille, graphiques). |
 | **Nom** *(obligatoire)* | Comme vous l'appelez : « Clio de Marie », « Le Kangoo »… |
 | **Marque, Modèle, Immatriculation, N° VIN** | Facultatifs, pour mémoire. L'immatriculation et le VIN sont mis en majuscules. |
 | **1re immatriculation** *(obligatoire)* | Indispensable : elle sert à calculer le premier contrôle technique. Vous la trouvez sur la carte grise (case B). |
 | **Carburant** | Pour mémoire. |
-| **Achetée d'occasion** | À cocher si vous n'êtes pas le premier propriétaire. Indiquez la **Date d'achat** et le **Km à l'achat** (obligatoire dans ce cas). Les règles d'entretien jamais faites partiront alors de cet achat (voir [§ 7](#7-les-règles-dentretien)). |
+| **Achetée d'occasion** | À cocher si vous n'êtes pas le premier propriétaire. Indiquez la **Date d'achat** et le **Km à l'achat** (obligatoire dans ce cas). Les règles d'entretien jamais faites partiront alors de cet achat (voir [§ 8](#8-les-règles-dentretien)). |
 
 Cliquez sur **Enregistrer**. La voiture apparaît dans la barre latérale.
 
@@ -94,9 +95,9 @@ Cliquez sur **Enregistrer**. La voiture apparaît dans la barre latérale.
 
 ### Modifier ou supprimer une voiture
 
-Onglet **Infos** de la voiture :
+Onglet **Infos** de la voiture (la photo y est affichée en grand, tout comme dans le résumé de la voiture) :
 - **Modifier** rouvre le formulaire.
-- **Supprimer la voiture** efface, après confirmation, la voiture **et tout son historique** : interventions, factures, relevés, règles et échéances. Pensez à [faire une sauvegarde](#13-sauvegarder-restaurer-exporter) avant.
+- **Supprimer la voiture** efface, après confirmation, la voiture **et tout son historique** : interventions, factures, relevés, règles et échéances. Pensez à [faire une sauvegarde](#14-sauvegarder-restaurer-exporter) avant.
 
 ---
 
@@ -115,13 +116,31 @@ Sélectionnez la voiture, puis **⌘N** (ou le bouton **+** de l'onglet **Interv
 | **Titre** | Ex. « Vidange + filtres ». Si vide, le type est affiché. |
 | **Date** | Date de l'intervention. |
 | **Kilométrage** *(obligatoire)* | Le km au compteur ce jour-là. Le dernier km connu est rappelé en grisé. |
-| **Garage** | Menu de vos garages, ou **Nouveau garage…** pour en créer un sans quitter le formulaire (voir [§ 10](#10-les-garages-et-leurs-contacts)). |
+| **Garage** | Menu de vos garages, ou **Nouveau garage…** pour en créer un sans quitter le formulaire (voir [§ 11](#11-les-garages-et-leurs-contacts)). |
 | **Montant (€)** | Ex. `189,90`. Virgule ou point acceptés. |
+| **Opérations** | Cochez ce qui a été fait : Vidange, Courroie de distribution / accessoires, Liquide de frein, Plaquettes / Disques, Filtres, Pneumatiques, Contrôle technique. **Autre opération** accepte une saisie libre (ex. « Essuie-glaces »). Elles alimentent le [carnet](#6-le-carnet-dentretien) et ses filtres. |
 | **Résultat du CT** | Apparaît seulement pour un contrôle technique : Favorable, Défavorable (contre-visite) ou Défaillance critique. |
-| **Règle d'entretien** | Relie l'intervention à une règle (vidange, courroie…) pour que la prochaine échéance se recalcule. **Pensez-y pour chaque entretien périodique !** |
+| **Règle d'entretien** | Relie l'intervention à une règle (vidange, courroie…) pour que la prochaine échéance se recalcule. Quand vous cochez une opération qui correspond à une règle (vidange, courroie, liquide de frein) et qu'aucune règle n'est choisie, la règle est **proposée automatiquement** : vous pouvez la changer. **Pensez-y pour chaque entretien périodique !** |
+| **Solde l'échéance** | Menu des échéances de la voiture (voir [§ 10](#10-les-échéances-assurance-pneus-courroie)) : à l'enregistrement, l'échéance choisie est validée et ses documents rejoignent l'intervention. Désactivé pour un **devis** (l'app vous invite à passer le statut à « Facture »). Déjà rempli quand vous venez de « Fait ✓… ». |
+| **Pièces jointes (devis, factures)** | Voir ci-dessous. |
 | **Notes** | Texte libre. |
 
 > Si le kilométrage saisi est **inférieur** au dernier connu à cette date, l'app vous prévient. Vous pouvez **Corriger** ou **Enregistrer quand même** (utile en cas de changement de compteur).
+
+### Joindre des documents dès la saisie
+
+Le formulaire contient une section **Pièces jointes (devis, factures)** : glissez-y des PDF ou des photos, ou cliquez sur **Ajouter…**. Chaque fichier propose **Ouvrir** (aperçu dans l'application par défaut), **Analyser** (voir ci-dessous) et une corbeille pour le retirer. Si vous cliquez sur **Annuler**, les fichiers ajoutés sont supprimés : rien ne reste.
+
+### La lecture automatique
+
+Quand vous ajoutez le **premier** document, SuiviAuto le lit pour vous éviter de tout retaper. Un encadré **Valeurs détectées** affiche ce qui a été reconnu : la **date**, le **montant TTC**, le **kilométrage** et les **opérations**.
+
+- **Appliquer** remplit les champs concernés du formulaire (seulement ceux qui ont été détectés) ;
+- **Ignorer** ferme l'encadré sans rien changer. Rien n'est jamais rempli sans votre accord.
+- **Analyser** (à côté d'un document) relance la lecture sur un autre fichier.
+- Si un fichier est illisible, l'app affiche « Ce document ne peut pas être lu. » : saisissez alors les valeurs à la main.
+
+La lecture se fait **sur votre Mac, sans Internet** : le texte d'un PDF est lu directement, une photo ou un PDF scanné passe par la reconnaissance de texte d'Apple. **Vérifiez toujours les valeurs** avant d'enregistrer : c'est une aide, elle peut se tromper (une date de livraison au lieu de la date de facture, un montant HT, un km mal lu…).
 
 ### Devis ou facture ?
 
@@ -134,6 +153,7 @@ Sélectionnez la voiture, puis **⌘N** (ou le bouton **+** de l'onglet **Interv
 - Le champ de **recherche** (en haut) cherche dans le titre, le type, le garage et les notes.
 - Le menu **Type** filtre la liste (« Tous les types » pour tout revoir).
 - Un trombone 📎 indique qu'une intervention a des documents joints.
+- Pour ne voir que les factures, avec total et export, utilisez l'onglet **Carnet** (voir [§ 6](#6-le-carnet-dentretien)).
 
 ### Modifier ou supprimer
 
@@ -148,6 +168,8 @@ Sélectionnez l'intervention : sa fiche s'affiche à droite. Dans la barre d'out
 Chaque intervention peut contenir autant de documents que vous voulez : factures, devis, procès-verbal de CT, photos…
 
 **Formats acceptés :** PDF, JPEG, PNG, HEIC (photos d'iPhone).
+
+Vous pouvez aussi joindre les documents **dès la création** de l'intervention, avec lecture automatique (voir [§ 4](#4-les-interventions--entretiens-réparations-ct)). Ce qui suit concerne une intervention déjà enregistrée.
 
 ### Ajouter un document
 
@@ -165,11 +187,37 @@ Le fichier est **copié** dans SuiviAuto : vous pouvez supprimer ou déplacer l'
 - **Double-clic** : ouvre le document dans l'application par défaut (Aperçu, en général).
 - **Clic droit** : Coup d'œil, Ouvrir, **Afficher dans le Finder**, Supprimer.
 
-Une vignette **« Fichier introuvable »** signifie que le fichier a disparu du dossier de SuiviAuto (voir [§ 14](#15-questions-fréquentes-et-dépannage)).
+Une vignette **« Fichier introuvable »** signifie que le fichier a disparu du dossier de SuiviAuto (voir [§ 16](#16-questions-fréquentes-et-dépannage)).
 
 ---
 
-## 6. Le kilométrage
+## 6. Le carnet d'entretien
+
+L'onglet **Carnet** (le deuxième de la voiture) est le carnet d'entretien « à l'ancienne » : il ne montre que les **factures** de la voiture, de la plus récente à la plus ancienne. Les **devis** n'y figurent pas.
+
+Chaque ligne met en avant la **date** et le **kilométrage**, puis les opérations effectuées (ou le titre), le garage, le montant et un trombone 📎 s'il y a des documents joints. Cliquez sur une ligne : sa fiche s'affiche à droite, comme dans l'onglet **Interventions**.
+
+### Chercher et filtrer
+
+- Le champ de **recherche** cherche dans le titre, les opérations, le garage et les notes.
+- Le menu **Opération** garde les factures qui comportent cette opération (**Toutes** pour tout revoir).
+- Le menu **Année** garde une seule année.
+- Le menu **Garage** garde un seul garage. Il ne propose que les garages qui ont une fiche : une facture dont le garage est resté en simple texte (voir [§ 11](#11-les-garages-et-leurs-contacts)) n'y apparaît pas, mais la recherche la retrouve.
+
+Sous les filtres, l'app affiche le **nombre d'interventions** et le **Total** des montants de la sélection. La recherche et les filtres sont remis à zéro quand vous changez de voiture.
+
+### Exporter le carnet
+
+Le menu **Exporter** (barre d'outils) exporte **ce qui est affiché** (filtres compris) :
+
+- **Exporter en PDF…** : un carnet imprimable avec le nom de la voiture, son immatriculation et son kilométrage estimé, un tableau (date, km, opérations, garage, montant), le total et la pagination automatique. Le PDF s'ouvre à la fin de l'export.
+- **Exporter en CSV…** : un tableau pour **Excel** ou **Numbers**.
+
+Pour garder une trace à jour, pensez à renseigner les **Opérations** de chaque intervention (voir [§ 4](#4-les-interventions--entretiens-réparations-ct)) : elles servent aux filtres et au PDF.
+
+---
+
+## 7. Le kilométrage
 
 SuiviAuto **estime** le kilométrage actuel de chaque voiture, ce qui permet de prévoir les entretiens exprimés en km.
 
@@ -194,7 +242,7 @@ SuiviAuto **estime** le kilométrage actuel de chaque voiture, ce qui permet de 
 
 ---
 
-## 7. Les règles d'entretien
+## 8. Les règles d'entretien
 
 Une règle dit **tous les combien** il faut refaire une opération : « Vidange tous les 15 000 km ou 12 mois ». **La première limite atteinte** (km ou date) déclenche l'alerte.
 
@@ -220,7 +268,7 @@ La date affichée est une **estimation** : SuiviAuto calcule quand vous atteindr
 
 ---
 
-## 8. Le contrôle technique
+## 9. Le contrôle technique
 
 SuiviAuto calcule automatiquement la date du prochain contrôle technique selon les règles françaises :
 
@@ -239,25 +287,38 @@ SuiviAuto calcule automatiquement la date du prochain contrôle technique selon 
 
 ---
 
-## 9. Les échéances libres (assurance, pneus…)
+## 10. Les échéances (assurance, pneus, courroie…)
 
-Pour tout ce qui a une date mais n'est pas un entretien : assurance, fin de garantie, pose des pneus hiver, vignette, abonnement…
+Pour tout ce qui a une date ou un kilométrage à surveiller mais n'est pas une règle d'entretien : assurance, fin de garantie, pose des pneus hiver, courroie à 90 000 km, vignette…
 
-Onglet **Échéances** > **+** :
-- **Libellé** : ex. « Assurance ».
-- **Date**.
-- **Se répète chaque année** : à cocher pour l'assurance, les pneus hiver…
-- **Notes** : ex. n° de contrat.
+Onglet **Échéances** > **Nouvelle échéance** :
 
-Quand c'est fait, cliquez sur **Fait ✓** :
-- échéance **annuelle** (**Fait ✓ (+1 an)**) : la date avance d'un an ;
-- échéance **ponctuelle** : elle est supprimée, après confirmation.
+| Champ | Utilité |
+|---|---|
+| **Libellé** | Ex. « Assurance ». |
+| **Type d'échéance** | **À une date** ou **À un kilométrage**. |
+| **Date** + **Se répète chaque année** | Mode date. À cocher pour l'assurance, les pneus hiver… |
+| **Kilométrage cible** *(obligatoire)* | Mode kilométrage, ex. `90 000`. L'app rappelle le kilométrage estimé aujourd'hui. |
+| **Puis tous les … km** *(facultatif)* | Mode kilométrage : après « Fait », l'échéance est reprogrammée tous les N km. |
+| **Notes** | Ex. n° de contrat. |
+| **Pièces jointes** | Un devis, par exemple : glissez-le ou **Ajouter…** (comme pour une intervention). |
 
-**Double-clic** ou clic droit > **Modifier** pour la changer ; clic droit > **Supprimer** pour l'effacer.
+Dans la liste, une échéance au kilométrage affiche la cible, la **date estimée** (≈) et **reste N km** ou **dépassé de N km**. Comme pour les règles, la date estimée dépend de vos relevés (voir [§ 7](#7-le-kilométrage)) ; sans estimation possible, seul le kilométrage est affiché.
+
+### Marquer une échéance comme faite
+
+Cliquez sur **Fait ✓…** : le formulaire d'**intervention** s'ouvre, déjà rempli (titre, date du jour, opérations déduites du libellé, échéance à solder). Complétez-le (km, garage, montant…) puis **Enregistrer** :
+
+- les **documents** de l'échéance (le devis) sont **transférés** à l'intervention ;
+- puis l'échéance avance : **+1 an** pour une échéance annuelle, **+ l'intervalle** (« Puis tous les … km ») pour une échéance au kilométrage ; sinon elle est **supprimée**.
+
+Si vous annulez le formulaire, rien ne change.
+
+**Modifier** et **Supprimer** : clic droit sur l'échéance. Supprimer demande confirmation et, s'il y a des documents joints, précise qu'ils seront supprimés avec l'échéance.
 
 ---
 
-## 10. Les garages et leurs contacts
+## 11. Les garages et leurs contacts
 
 SuiviAuto garde une **fiche par garage** : coordonnées, horaires, votre avis, les personnes à contacter et tout ce que vous y avez fait faire, **toutes voitures confondues**.
 
@@ -334,7 +395,7 @@ Il ne reste plus qu'à compléter les fiches (adresse, téléphone, contacts…)
 
 ---
 
-## 11. Le tableau de bord
+## 12. Le tableau de bord
 
 Cliquez sur **Tableau de bord** en haut de la barre latérale.
 
@@ -348,7 +409,7 @@ Le **résumé d'une voiture** (colonne de droite quand aucune intervention n'est
 
 ---
 
-## 12. Les rappels (notifications)
+## 13. Les rappels (notifications)
 
 SuiviAuto vous prévient **30 jours** puis **7 jours** avant chaque échéance datée, à **9 h** du matin : contrôle technique, règles d'entretien, échéances libres. Pour les règles en kilomètres, c'est la date **estimée** qui sert.
 
@@ -361,7 +422,7 @@ Les rappels sont recalculés à chaque modification, et à chaque ouverture de l
 
 ---
 
-## 13. Sauvegarder, restaurer, exporter
+## 14. Sauvegarder, restaurer, exporter
 
 Vos données (base et documents) sont dans `~/Library/Application Support/SuiviAuto/`. **Time Machine** les sauvegarde automatiquement. Vous pouvez aussi faire des sauvegardes manuelles, par exemple avant de changer de Mac.
 
@@ -377,13 +438,15 @@ Menu **Fichier > Importer une sauvegarde…**, choisissez le `.zip`, puis confir
 - Par sécurité, vos données d'avant sont **conservées** dans un dossier `SuiviAuto-avant-restauration-<date>` (dans `~/Library/Application Support/`). Vous pourrez le supprimer quand tout vous semble correct.
 - Une sauvegarde abîmée ou qui ne vient pas de SuiviAuto est refusée, sans toucher à vos données.
 
-### Copie de sécurité lors du passage à la 1.1
+### Copie de sécurité lors d'une mise à jour
 
-Au premier lancement de la 1.1, si vos données viennent de la 1.0, SuiviAuto en fait d'abord une copie dans `~/Library/Application Support/SuiviAuto-avant-1.1-<date>`, **avant** de les convertir. Vous pourrez la supprimer quand tout vous semble correct.
+Quand une nouvelle version doit convertir vos données (par exemple en passant de la 1.1 à la 2.0), SuiviAuto en fait d'abord une copie dans `~/Library/Application Support/SuiviAuto-avant-<version>-<date>` (par exemple `SuiviAuto-avant-2.0-<date>`), **avant** de les convertir. Vous pourrez la supprimer quand tout vous semble correct.
+
+Au lancement, l'app supprime aussi les fichiers orphelins de son dossier de documents (fichiers qui ne sont rattachés à rien et vieux de plus d'une heure) : vous n'avez rien à faire.
 
 ### Exporter l'historique en CSV
 
-Menu **Fichier > Exporter l'historique en CSV…** : un tableau (voiture, date, km, type, titre, garage, montant, statut) qui s'ouvre directement dans **Excel** ou **Numbers**.
+Menu **Fichier > Exporter l'historique en CSV…** : tout l'historique de toutes les voitures (pour le carnet d'une seule voiture, voir [§ 6](#6-le-carnet-dentretien)) sous forme de tableau (voiture, date, km, type, titre, garage, montant, statut) qui s'ouvre directement dans **Excel** ou **Numbers**.
 
 ### Changer de Mac
 
@@ -393,7 +456,7 @@ Menu **Fichier > Exporter l'historique en CSV…** : un tableau (voiture, date, 
 
 ---
 
-## 14. Raccourcis clavier
+## 15. Raccourcis clavier
 
 | Raccourci | Action |
 |---|---|
@@ -410,7 +473,7 @@ Menu **Fichier > Exporter l'historique en CSV…** : un tableau (voiture, date, 
 
 ---
 
-## 15. Questions fréquentes et dépannage
+## 16. Questions fréquentes et dépannage
 
 **Toutes les échéances de ma voiture sont rouges juste après l'avoir ajoutée.**
 C'est normal pour une voiture qui roule déjà : l'app ne connaît pas encore son historique. Saisissez le **dernier contrôle technique** et les **derniers entretiens** (en factures, avec la bonne **Règle d'entretien**). Si vous l'avez achetée d'occasion, cochez **Achetée d'occasion** dans l'onglet **Infos > Modifier**.
@@ -442,12 +505,18 @@ Le message indique où se trouve la base et, s'il en existe une, la copie de vos
 **Mes anciens noms de garage ont-ils été conservés ? Il y a un garage en double.**
 Au premier lancement de la 1.1, les noms déjà saisis ont été convertis en fiches, et les variantes de casse, d'espaces et d'accents (« Garage Martin », « garage  martin », « Garage Martín ») regroupées en une seule fiche. Si deux garages vous semblent identiques malgré tout, ouvrez l'intervention concernée, choisissez le bon garage dans le menu **Garage** et supprimez la fiche en trop. Un nom qui n'a pas pu être converti apparaît dans le menu sous la forme `<nom> (texte)` : choisissezsez simplement un garage de la liste pour le remplacer.
 
+**L'icône dans le Dock (ou dans Applications) est l'ancienne.**
+macOS garde parfois l'ancienne icône en mémoire. Ouvrez le **Terminal** et tapez `killall Dock` (le Dock redémarre tout seul), ou redémarrez le Mac.
+
+**La lecture automatique d'un document se trompe ou ne trouve rien.**
+C'est une aide, pas une garantie : une photo floue, une facture manuscrite ou une mise en page inhabituelle peuvent la tromper. Corrigez simplement les champs du formulaire (ou cliquez sur **Ignorer** et saisissez tout vous-même). Vérifiez toujours la date, le montant et le kilométrage avant d'enregistrer.
+
 **Désinstaller SuiviAuto.**
 Mettez l'app à la corbeille depuis Applications. Pour effacer aussi vos données (définitivement !), supprimez le dossier `~/Library/Application Support/SuiviAuto/`. Pour y accéder : dans le Finder, menu **Aller > Aller au dossier…** (⇧⌘G) et collez ce chemin.
 
 ---
 
-## 16. Signaler un problème, proposer une idée
+## 17. Signaler un problème, proposer une idée
 
 Rendez-vous sur la [page de suivi](https://github.com/glecomte62/SuiviAuto/issues/new/choose) (menu **Aide > Signaler un problème ou proposer une idée…** dans l'app) et choisissez **Signaler un problème** ou **Proposer une idée**.
 

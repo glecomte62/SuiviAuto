@@ -6,6 +6,8 @@ Créé par **Guillaume LECOMTE**.
 
 Suivi d'entretien de voitures pour macOS : interventions, factures et devis, contrôle technique, kilométrage, rappels.
 
+**Nouveautés 2.0 :** photo de voiture en entier, opérations détaillées, onglet Carnet (filtres, export PDF/CSV), échéances au kilométrage avec devis joints, lecture automatique des factures (sur le Mac, hors ligne).
+
 ## Commandes
 
 ```bash
