@@ -41,7 +41,7 @@ struct ContentView: View {
             .navigationSplitViewColumnWidth(min: 340, ideal: 420)
         } detail: {
             if let car = selectedCar {
-                if carTab == .interventions, let i = selectedIntervention, i.car == car {
+                if carTab == .interventions || carTab == .carnet, let i = selectedIntervention, i.car == car {
                     InterventionDetailView(intervention: i, onDelete: { delete(i) })
                         .id(i.persistentModelID)
                 } else {
@@ -54,6 +54,8 @@ struct ContentView: View {
             }
         }
         .onChange(of: selection) { selectedIntervention = nil }
+        // Une sélection d'un onglet peut être absente de l'autre (ex. un devis n'est pas dans le carnet).
+        .onChange(of: carTab) { selectedIntervention = nil }
         .onChange(of: appState.showingNewIntervention) { _, shown in
             if shown && selectedCar == nil {
                 appState.showingNewIntervention = false

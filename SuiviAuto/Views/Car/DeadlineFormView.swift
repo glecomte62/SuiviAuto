@@ -7,39 +7,88 @@ struct DeadlineFormView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var label = ""
+    @State private var mode: DeadlineMode = .date
     @State private var dueDate = Date.now
     @State private var repeatsYearly = true
+    @State private var targetMileageText = ""
+    @State private var intervalKmText = ""
     @State private var notes = ""
+    @State private var pending = PendingAttachments()
+    @State private var saved = false
+    @State private var loaded = false
     @State private var errorMessage: String?
+
+    private var targetMileage: Int? { NumberInput.parseInt(targetMileageText) }
+    private var intervalKm: Int? { NumberInput.parseInt(intervalKmText) }
+
+    private var isValid: Bool {
+        guard !label.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        guard mode == .km else { return true }
+        let intervalBlankOrValid = intervalKmText.trimmingCharacters(in: .whitespaces).isEmpty || intervalKm != nil
+        return targetMileage != nil && intervalBlankOrValid
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(deadline == nil ? "Nouvelle échéance" : "Modifier l'échéance").font(.title2.bold()).padding([.top, .horizontal])
             Form {
-                TextField("Libellé", text: $label, prompt: Text("ex. Assurance, pneus hiver, fin de garantie"))
-                DatePicker("Date", selection: $dueDate, displayedComponents: .date)
-                Toggle("Se répète chaque année", isOn: $repeatsYearly)
-                TextField("Notes", text: $notes, axis: .vertical).lineLimit(2...4)
+                Section {
+                    TextField("Libellé", text: $label, prompt: Text("ex. Assurance, pneus hiver, courroie"))
+                    Picker("Type d'échéance", selection: $mode) {
+                        ForEach(DeadlineMode.allCases) { Text($0.label).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    switch mode {
+                    case .date:
+                        DatePicker("Date", selection: $dueDate, displayedComponents: .date)
+                        Toggle("Se répète chaque année", isOn: $repeatsYearly)
+                    case .km:
+                        TextField("Kilométrage cible", text: $targetMileageText, prompt: Text("obligatoire, ex. 90 000"))
+                        TextField("Puis tous les … km (facultatif)", text: $intervalKmText, prompt: Text("ex. 15 000"))
+                        Text("Kilométrage estimé aujourd'hui : "
+                             + (CarAnalytics.estimator(for: car).estimatedCurrentMileage.map(Fmt.km) ?? "inconnu"))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    TextField("Notes", text: $notes, axis: .vertical).lineLimit(2...4)
+                }
+                AttachmentsSection(pending: pending, existing: deadline?.documents ?? [],
+                                   onDeleteExisting: deleteExisting)
             }
             .formStyle(.grouped)
             HStack {
                 Spacer()
-                Button("Annuler", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Annuler", role: .cancel) {
+                    pending.discard()
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
                 Button("Enregistrer") { save() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(label.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(!isValid)
             }
             .padding()
         }
-        .frame(width: 440)
-        .onAppear {
-            if let deadline {
-                label = deadline.label; dueDate = deadline.dueDate; repeatsYearly = deadline.repeatsYearly; notes = deadline.notes
-            }
-        }
+        .frame(width: 480)
+        .onAppear(perform: load)
+        .onDisappear { if !saved { pending.discard() } }
         .alert("Erreur", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(errorMessage ?? "") }
+    }
+
+    private func load() {
+        guard !loaded else { return }
+        loaded = true
+        guard let deadline else { return }
+        label = deadline.label; mode = deadline.mode; dueDate = deadline.dueDate
+        repeatsYearly = deadline.repeatsYearly; notes = deadline.notes
+        targetMileageText = deadline.targetMileage.map(String.init) ?? ""
+        intervalKmText = deadline.intervalKm.map(String.init) ?? ""
+    }
+
+    private func deleteExisting(_ doc: StoredDocument) {
+        do { try DeletionService.delete(doc, in: context) }
+        catch { errorMessage = "Suppression impossible : \(error.localizedDescription)" }
     }
 
     private func save() {
@@ -52,13 +101,26 @@ struct DeadlineFormView: View {
             target.car = car
         }
         target.label = label.trimmingCharacters(in: .whitespaces)
-        target.dueDate = dueDate
-        target.repeatsYearly = repeatsYearly
+        target.mode = mode
         target.notes = notes
+        switch mode {
+        case .date:
+            target.dueDate = dueDate
+            target.repeatsYearly = repeatsYearly
+            target.targetMileage = nil
+            target.intervalKm = nil
+        case .km:
+            target.targetMileage = targetMileage
+            target.intervalKm = (intervalKm ?? 0) > 0 ? intervalKm : nil
+            target.repeatsYearly = false
+        }
+        let attached = pending.attach(to: target, in: context)
         do {
             try DeletionService.saveOrRollback(context)
+            saved = true
             dismiss()
         } catch {
+            pending.deleteFiles(named: attached)
             errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
     }

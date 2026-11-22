@@ -159,3 +159,14 @@ final class DeadlineTextTests: XCTestCase {
         XCTAssertEqual(DeadlineText.target(mode: .km, dueDate: .distantPast, targetMileage: 90_000), "à \(Fmt.km(90_000))")
     }
 }
+
+final class DeadlineSortTests: XCTestCase {
+    func testOverdueKmFirstThenByDateThenUnknown() {
+        let passed = DeadlineDue(dueDate: nil, dueKm: 80_000, remainingKm: -10, status: .overdue)
+        let early = DeadlineDue(dueDate: T.date("2026-02-01"), dueKm: nil, remainingKm: nil, status: .soon)
+        let late = DeadlineDue(dueDate: T.date("2027-02-01"), dueKm: 95_000, remainingKm: 9_000, status: .ok)
+        let unknown = DeadlineDue(dueDate: nil, dueKm: nil, remainingKm: nil, status: .ok)
+        let sorted = [unknown, late, passed, early].sorted { DeadlineText.sortKey($0) < DeadlineText.sortKey($1) }
+        XCTAssertEqual(sorted, [passed, early, late, unknown])
+    }
+}

@@ -1,11 +1,12 @@
 import SwiftUI
 
 enum CarTab: String, CaseIterable, Identifiable {
-    case interventions, kilometrage, regles, echeances, infos
+    case interventions, carnet, kilometrage, regles, echeances, infos
     var id: String { rawValue }
     var label: String {
         switch self {
         case .interventions: "Interventions"
+        case .carnet: "Carnet"
         case .kilometrage: "Km"
         case .regles: "Règles"
         case .echeances: "Échéances"
@@ -31,6 +32,7 @@ struct CarContentView: View {
             Divider()
             switch tab {
             case .interventions: InterventionListView(car: car, selection: $selectedIntervention)
+            case .carnet: CarnetView(car: car, selection: $selectedIntervention)
             case .kilometrage: MileageView(car: car)
             case .regles: RulesView(car: car)
             case .echeances: DeadlinesView(car: car)

@@ -26,4 +26,11 @@ enum DeadlineText {
             return parts.joined(separator: " · ")
         }
     }
+
+    /// Ordre de la liste : km déjà dépassés (sans date estimée) en tête, puis par date réelle ou estimée,
+    /// puis les échéances au km sans estimation, par km cible.
+    static func sortKey(_ due: DeadlineDue) -> (Int, Date, Int) {
+        if let date = due.dueDate { return (1, date, due.dueKm ?? 0) }
+        return (due.status == .overdue ? 0 : 2, .distantPast, due.dueKm ?? .max)
+    }
 }
