@@ -60,10 +60,13 @@ struct SuiviAutoApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("Nouvelle voiture") { appState.showingNewCar = true }
                     .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .disabled(appState.isPresentingSheet)
                 Button("Nouvelle intervention") { appState.showingNewIntervention = true }
                     .keyboardShortcut("n", modifiers: .command)
+                    .disabled(appState.isPresentingSheet)
                 Button("Nouveau relevé km") { appState.showingNewReading = true }
                     .keyboardShortcut("k", modifiers: .command)
+                    .disabled(appState.isPresentingSheet)
             }
             CommandGroup(replacing: .importExport) {
                 Button("Exporter une sauvegarde…") { BackupActions.exportBackup(container: container, appState: appState) }

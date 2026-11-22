@@ -13,7 +13,8 @@ enum NotificationPlanner {
     /// macOS limite le nombre de notifications en attente : on garde les plus proches.
     static let maxPending = 60
 
-    static func plan(items: [DueItem], now: Date, calendar: Calendar = .current) -> [PlannedNotification] {
+    static func plan(items: [DueItem], now: Date, calendar: Calendar = .current,
+                     maxPending: Int = maxPending) -> [PlannedNotification] {
         let all = items.flatMap { item -> [PlannedNotification] in
             guard let due = item.dueDate else { return [] }
             return leadDays.compactMap { lead in
@@ -21,10 +22,9 @@ enum NotificationPlanner {
                       let fire = calendar.date(bySettingHour: fireHour, minute: 0, second: 0, of: day),
                       fire > now else { return nil }
                 let when = due.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "fr_FR")))
-                let estimated = item.dueKm != nil ? " (date estimée)" : ""
                 return PlannedNotification(id: "\(item.id)-J\(lead)",
                                            title: "\(item.carName) : \(item.label)",
-                                           body: "Échéance dans \(lead) jours, le \(when)\(estimated).",
+                                           body: "Échéance dans \(lead) jours, le \(when).",
                                            fireDate: fire)
             }
         }

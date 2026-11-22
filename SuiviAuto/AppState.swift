@@ -7,6 +7,8 @@ final class AppState {
     var showingNewReading = false
     var errorMessage: String?
 
+    var isPresentingSheet: Bool { showingNewCar || showingNewIntervention || showingNewReading }
+
     init(errorMessage: String? = nil) {
         self.errorMessage = errorMessage
     }

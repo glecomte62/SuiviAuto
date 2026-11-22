@@ -38,12 +38,16 @@ struct CarFormView: View {
                     HStack {
                         Text("Couleur")
                         Spacer()
-                        ForEach(CarPalette.colors, id: \.self) { hex in
-                            Circle().fill(Color(hex: hex).gradient)
-                                .frame(width: 22, height: 22)
-                                .overlay(Circle().strokeBorder(.primary, lineWidth: colorHex == hex ? 2.5 : 0))
-                                .shadow(radius: 1, y: 1)
-                                .onTapGesture { colorHex = hex }
+                        ForEach(Array(CarPalette.colors.enumerated()), id: \.element) { index, hex in
+                            Button { colorHex = hex } label: {
+                                Circle().fill(Color(hex: hex).gradient)
+                                    .frame(width: 22, height: 22)
+                                    .overlay(Circle().strokeBorder(.primary, lineWidth: colorHex == hex ? 2.5 : 0))
+                                    .shadow(radius: 1, y: 1)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Couleur \(index + 1)")
+                            .accessibilityAddTraits(colorHex == hex ? .isSelected : [])
                         }
                     }
                 }

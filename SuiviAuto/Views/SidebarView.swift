@@ -45,6 +45,7 @@ struct CarRow: View {
             if status != .ok {
                 Image(systemName: status.symbol).foregroundStyle(status.color)
                     .help(status.label)
+                    .accessibilityLabel(status.label)
             }
         }
         .padding(.vertical, 3)

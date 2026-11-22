@@ -9,12 +9,14 @@ enum NotificationScheduler {
     }
 
     /// Supprime puis replanifie toutes les notifications (idempotent).
+    /// S'arrête dès que la tâche est annulée (une replanification plus récente a pris le relais).
     static func reschedule(context: ModelContext) async {
         let cars = (try? context.fetch(FetchDescriptor<Car>())) ?? []
         let plans = NotificationPlanner.plan(items: DueAggregator.items(for: cars), now: .now)
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
         for plan in plans {
+            guard !Task.isCancelled else { return }
             let content = UNMutableNotificationContent()
             content.title = plan.title
             content.body = plan.body

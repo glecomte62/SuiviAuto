@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var selection: SidebarItem? = .dashboard
     @State private var selectedIntervention: Intervention?
     @State private var carTab: CarTab = .interventions
+    @State private var rescheduleTask: Task<Void, Never>?
 
     private var selectedCar: Car? {
         if case .car(let car) = selection { return car }
@@ -74,11 +75,22 @@ struct ContentView: View {
         .task {
             guard !SuiviAutoApp.isRunningTests else { return }
             await NotificationScheduler.requestAuthorization()
-            await NotificationScheduler.reschedule(context: context)
+            reschedule()
         }
         .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in
             guard !SuiviAutoApp.isRunningTests else { return }
-            Task { await NotificationScheduler.reschedule(context: context) }
+            reschedule()
+        }
+    }
+
+    /// Une seule replanification à la fois : la précédente est annulée et attendue avant de recommencer.
+    private func reschedule() {
+        let previous = rescheduleTask
+        previous?.cancel()
+        rescheduleTask = Task {
+            await previous?.value
+            guard !Task.isCancelled else { return }
+            await NotificationScheduler.reschedule(context: context)
         }
     }
 
@@ -94,6 +106,7 @@ struct ContentView: View {
     private func delete(_ car: Car) {
         selectedIntervention = nil
         selection = .dashboard
+        carTab = .interventions
         DispatchQueue.main.async {
             do { try DeletionService.delete(car, in: context) }
             catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }

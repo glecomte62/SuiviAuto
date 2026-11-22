@@ -20,5 +20,6 @@ struct CarAvatar: View {
         .clipShape(Circle())
         .overlay(Circle().strokeBorder(tint, lineWidth: 2))
         .shadow(color: tint.opacity(0.45), radius: 3, y: 2)
+        .accessibilityHidden(true)
     }
 }
