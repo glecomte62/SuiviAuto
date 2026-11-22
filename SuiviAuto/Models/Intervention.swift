@@ -8,6 +8,10 @@ final class Intervention {
     var kindRaw: String = "entretien"
     var title: String = ""
     var garage: String = ""
+    /// Garage lié (1.1). `garage` reste le nom texte historique.
+    var garageRef: Garage?
+    /// Vrai quand le texte `garage` a déjà été traité (converti ou recopié à la suppression d'un garage).
+    var garageTextMigrated: Bool = false
     var amountCents: Int?
     var statusRaw: String = "facture"
     var notes: String = ""
@@ -42,4 +46,5 @@ final class Intervention {
     }
 
     var displayTitle: String { title.isEmpty ? kind.label : title }
+    var garageDisplayName: String { garageRef?.name ?? garage }
 }
