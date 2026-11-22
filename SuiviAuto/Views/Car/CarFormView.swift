@@ -37,7 +37,7 @@ struct CarFormView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Button("Choisir une photo…") { pickingPhoto = true }
                             if photo != nil { Button("Retirer la photo", role: .destructive) { photo = nil } }
-                            Text("ou glissez une image sur le cercle").font(.caption).foregroundStyle(.secondary)
+                            Text("ou glissez une image sur le cadre").font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     HStack {
@@ -95,17 +95,20 @@ struct CarFormView: View {
     }
 
     private var avatarPreview: some View {
-        ZStack {
+        let tint = Color(hex: colorHex)
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        return ZStack {
+            shape.fill(tint.gradient)
             if let photo, let image = NSImage(data: photo) {
-                Image(nsImage: image).resizable().scaledToFill()
+                Image(nsImage: image).resizable().scaledToFit().padding(4)
             } else {
-                Circle().fill(Color(hex: colorHex).gradient)
                 Image(systemName: "car.fill").font(.system(size: 30)).foregroundStyle(.white)
             }
         }
-        .frame(width: 72, height: 72)
-        .clipShape(Circle())
-        .shadow(color: Color(hex: colorHex).opacity(0.5), radius: 5, y: 3)
+        .frame(width: 160, height: 100)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(tint, lineWidth: 1.5))
+        .shadow(color: tint.opacity(0.5), radius: 5, y: 3)
         .dropDestination(for: URL.self) { urls, _ in
             guard let url = urls.first else { return false }
             loadPhoto(url)

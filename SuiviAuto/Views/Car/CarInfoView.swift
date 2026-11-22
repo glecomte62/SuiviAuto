@@ -9,13 +9,11 @@ struct CarInfoView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
+                CarPhotoView(car: car)
                 Card(tint: Color(hex: car.colorHex)) {
-                    HStack(spacing: 16) {
-                        CarAvatar(car: car, size: 84)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(car.name).font(.title2.bold())
-                            Text("\(car.brand) \(car.modelName)").foregroundStyle(.secondary)
-                        }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(car.name).font(.title2.bold())
+                        Text("\(car.brand) \(car.modelName)").foregroundStyle(.secondary)
                     }
                 }
                 Card(tint: Color(hex: car.colorHex)) {

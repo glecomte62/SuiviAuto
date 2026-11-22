@@ -6,19 +6,20 @@ struct CarAvatar: View {
 
     var body: some View {
         let tint = Color(hex: car.colorHex)
+        let shape = RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
         ZStack {
+            shape.fill(tint.gradient)
             if let data = car.photo, let image = NSImage(data: data) {
-                Image(nsImage: image).resizable().scaledToFill()
+                Image(nsImage: image).resizable().scaledToFit().padding(size * 0.06)
             } else {
-                Circle().fill(tint.gradient)
                 Image(systemName: "car.fill")
                     .font(.system(size: size * 0.45, weight: .semibold))
                     .foregroundStyle(.white)
             }
         }
         .frame(width: size, height: size)
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(tint, lineWidth: 2))
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(tint, lineWidth: 2))
         .shadow(color: tint.opacity(0.45), radius: 3, y: 2)
         .accessibilityHidden(true)
     }

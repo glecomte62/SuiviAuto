@@ -13,9 +13,9 @@ struct CarSummaryView: View {
 
         ScrollView {
             VStack(spacing: 16) {
+                CarPhotoView(car: car)
                 Card(tint: tint) {
                     HStack(spacing: 16) {
-                        CarAvatar(car: car, size: 72)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(car.name).font(.title.bold())
                             Text([car.brand, car.modelName, car.plate].filter { !$0.isEmpty }.joined(separator: " · "))
