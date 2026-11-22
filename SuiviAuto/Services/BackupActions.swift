@@ -27,7 +27,7 @@ enum BackupActions {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "Remplacer toutes les données ?"
-        alert.informativeText = "Les données actuelles seront remplacées par la sauvegarde. Une copie est conservée dans « SuiviAuto-avant-restauration ». L'application va redémarrer."
+        alert.informativeText = "Les données actuelles seront remplacées par la sauvegarde. Une copie est conservée dans « SuiviAuto-avant-restauration-<date> » (Application Support). L'application va redémarrer."
         alert.addButton(withTitle: "Remplacer et redémarrer")
         alert.addButton(withTitle: "Annuler")
         guard alert.runModal() == .alertFirstButtonReturn else { return }

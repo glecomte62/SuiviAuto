@@ -34,13 +34,106 @@ final class BackupServiceTests: XCTestCase {
         try BackupService.stageRestore(from: zip, pending: pending)
         XCTAssertTrue(fm.fileExists(atPath: pending.appendingPathComponent("SuiviAuto.store").path))
 
-        try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending)
+        try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, now: localDate(2026, 3, 5, 14, 7, 9))
         XCTAssertEqual(try read(base.appendingPathComponent("SuiviAuto.store")), "store-v1")
         XCTAssertEqual(try read(base.appendingPathComponent("Documents/a.pdf")), "pdf")
         XCTAssertFalse(fm.fileExists(atPath: pending.path))
 
-        let previous = root.appendingPathComponent("SuiviAuto-avant-restauration/SuiviAuto.store")
+        let previous = root.appendingPathComponent("SuiviAuto-avant-restauration-20260305-140709/SuiviAuto.store")
         XCTAssertEqual(try read(previous), "store-v2")
+    }
+
+    /// Date dans le fuseau local (celui du DateFormatter de BackupService).
+    func localDate(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int, _ s: Int) -> Date {
+        Calendar.current.date(from: DateComponents(year: y, month: m, day: d, hour: h, minute: min, second: s))!
+    }
+
+    func makePending(_ content: String) throws {
+        try fm.createDirectory(at: pending, withIntermediateDirectories: true)
+        try Data(content.utf8).write(to: pending.appendingPathComponent("SuiviAuto.store"))
+    }
+
+    func testSafetyCopiesArePreservedAcrossRestores() throws {
+        try makePending("restore-1")
+        try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, now: localDate(2026, 3, 5, 10, 0, 0))
+        try makePending("restore-2")
+        try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, now: localDate(2026, 3, 6, 10, 0, 0))
+
+        XCTAssertEqual(try read(base.appendingPathComponent("SuiviAuto.store")), "restore-2")
+        XCTAssertEqual(try read(root.appendingPathComponent("SuiviAuto-avant-restauration-20260305-100000/SuiviAuto.store")), "store-v1")
+        XCTAssertEqual(try read(root.appendingPathComponent("SuiviAuto-avant-restauration-20260306-100000/SuiviAuto.store")), "restore-1")
+    }
+
+    func testSafetyCopyWithSameTimestampIsNotOverwritten() throws {
+        let now = localDate(2026, 3, 5, 10, 0, 0)
+        try makePending("restore-1")
+        try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, now: now)
+        try makePending("restore-2")
+        try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, now: now)
+
+        XCTAssertEqual(try read(base.appendingPathComponent("SuiviAuto.store")), "restore-2")
+        XCTAssertEqual(try read(root.appendingPathComponent("SuiviAuto-avant-restauration-20260305-100000/SuiviAuto.store")), "store-v1")
+        XCTAssertEqual(try read(root.appendingPathComponent("SuiviAuto-avant-restauration-20260305-100000-2/SuiviAuto.store")), "restore-1")
+    }
+
+    func testFailedRestoreRollsBackCurrentData() throws {
+        struct Boom: Error {}
+        try makePending("restore-1")
+        var calls = 0
+        let move: (URL, URL) throws -> Void = { src, dst in
+            calls += 1
+            if calls == 2 { throw Boom() } // pending → base
+            try FileManager.default.moveItem(at: src, to: dst)
+        }
+        XCTAssertThrowsError(try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, moveItem: move)) {
+            XCTAssertTrue($0 is Boom)
+        }
+        XCTAssertEqual(try read(base.appendingPathComponent("SuiviAuto.store")), "store-v1")
+        XCTAssertEqual(try read(base.appendingPathComponent("Documents/a.pdf")), "pdf")
+        XCTAssertEqual(try read(pending.appendingPathComponent("SuiviAuto.store")), "restore-1")
+        let leftovers = try fm.contentsOfDirectory(atPath: root.path).filter { $0.hasPrefix("SuiviAuto-avant-restauration") }
+        XCTAssertEqual(leftovers, [])
+    }
+
+    func testExportDoesNotDestroyExistingZipOnFailure() throws {
+        // destination dans un dossier inexistant : l'export échoue sans rien créer
+        let zip = root.appendingPathComponent("absent/sauvegarde.zip")
+        XCTAssertThrowsError(try BackupService.exportBackup(to: zip, base: base))
+        // destination existante : remplacée par une archive valide
+        let existing = root.appendingPathComponent("existante.zip")
+        try Data("ancienne".utf8).write(to: existing)
+        try BackupService.exportBackup(to: existing, base: base)
+        try BackupService.stageRestore(from: existing, pending: pending)
+        XCTAssertEqual(try read(pending.appendingPathComponent("SuiviAuto.store")), "store-v1")
+    }
+
+    @MainActor
+    func testExportLiveSQLiteStoreRoundTrip() throws {
+        let storeURL = base.appendingPathComponent("SuiviAuto.store")
+        try fm.removeItem(at: storeURL)
+        let container = try ModelContainer(for: Schema(SchemaModels.all),
+                                           configurations: ModelConfiguration(url: storeURL))
+        let ctx = ModelContext(container)
+        ctx.insert(Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01")))
+        try ctx.save()
+
+        // export pendant que le conteneur est ouvert (WAL non fusionné)
+        let zip = root.appendingPathComponent("live.zip")
+        try BackupService.exportBackup(to: zip, base: base)
+
+        let otherRoot = root.appendingPathComponent("autre")
+        let otherBase = otherRoot.appendingPathComponent("SuiviAuto")
+        let otherPending = otherRoot.appendingPathComponent("SuiviAuto-PendingRestore")
+        try fm.createDirectory(at: otherRoot, withIntermediateDirectories: true)
+        try BackupService.stageRestore(from: zip, pending: otherPending)
+        try BackupService.applyPendingRestoreIfNeeded(base: otherBase, pending: otherPending)
+        XCTAssertEqual(try read(otherBase.appendingPathComponent("Documents/a.pdf")), "pdf")
+
+        let restored = try ModelContainer(for: Schema(SchemaModels.all),
+                                          configurations: ModelConfiguration(url: otherBase.appendingPathComponent("SuiviAuto.store")))
+        let cars = try ModelContext(restored).fetch(FetchDescriptor<Car>())
+        XCTAssertEqual(cars.map(\.name), ["Clio"])
+        _ = container
     }
 
     func testApplyWithoutPendingDoesNothing() throws {
