@@ -7,7 +7,7 @@ Suivi d'entretien de voitures pour macOS : interventions, factures et devis, con
 ```bash
 scripts/test.sh      # tests unitaires
 scripts/build.sh     # compilation Debug
-scripts/install.sh   # compilation Release + copie dans ~/Applications
+scripts/install.sh   # compilation Release + copie dans /Applications
 ```
 
 Prérequis : Xcode 27+, `brew install xcodegen`.
