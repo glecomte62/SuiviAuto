@@ -36,7 +36,9 @@ targets:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - SuiviAutoTests
+      - path: SuiviAutoTests
+        excludes:
+          - "Fixtures/**"
     dependencies:
       - target: SuiviAuto
     settings:
