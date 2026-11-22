@@ -79,6 +79,10 @@ struct SuiviAutoApp: App {
                 Button("Nouveau relevé km") { appState.showingNewReading = true }
                     .keyboardShortcut("k", modifiers: .command)
                     .disabled(appState.isPresentingSheet)
+                Divider()
+                Button("Nouveau garage") { appState.showingNewGarage = true }
+                    .keyboardShortcut("n", modifiers: [.command, .option])
+                    .disabled(appState.isPresentingSheet)
             }
             CommandGroup(replacing: .importExport) {
                 Button("Exporter une sauvegarde…") { BackupActions.exportBackup(container: container, appState: appState) }

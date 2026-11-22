@@ -8,4 +8,11 @@ final class AppStateTests: XCTestCase {
         state.localSheetCount = 1
         XCTAssertTrue(state.isPresentingSheet)
     }
+
+    func testNewGarageSheetCountsAsPresenting() {
+        let state = AppState()
+        XCTAssertFalse(state.isPresentingSheet)
+        state.showingNewGarage = true
+        XCTAssertTrue(state.isPresentingSheet)
+    }
 }

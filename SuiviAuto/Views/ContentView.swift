@@ -5,6 +5,7 @@ struct ContentView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var context
     @Query(sort: \Car.createdAt) private var cars: [Car]
+    @Query private var garages: [Garage]
 
     @State private var selection: SidebarItem? = .dashboard
     @State private var selectedIntervention: Intervention?
@@ -16,16 +17,23 @@ struct ContentView: View {
         return nil
     }
 
+    private var selectedGarage: Garage? {
+        if case .garage(let garage) = selection { return garage }
+        return nil
+    }
+
     var body: some View {
         @Bindable var appState = appState
         NavigationSplitView {
-            SidebarView(cars: cars, selection: $selection)
+            SidebarView(cars: cars, garages: GarageService.sorted(garages), selection: $selection)
                 .navigationSplitViewColumnWidth(min: 200, ideal: 230)
         } content: {
             Group {
                 if let car = selectedCar {
                     CarContentView(car: car, tab: $carTab, selectedIntervention: $selectedIntervention,
                                    onDeleteCar: { delete(car) })
+                } else if let garage = selectedGarage {
+                    GarageContentView(garage: garage, onDelete: { delete(garage) })
                 } else {
                     DueListView(items: DueAggregator.items(for: cars), hasCars: !cars.isEmpty)
                 }
@@ -39,6 +47,8 @@ struct ContentView: View {
                 } else {
                     CarSummaryView(car: car)
                 }
+            } else if let garage = selectedGarage {
+                GarageInterventionsView(garage: garage)
             } else {
                 DashboardChartsView(cars: cars)
             }
@@ -58,6 +68,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $appState.showingNewCar) {
             CarFormView(car: nil) { newCar in selection = .car(newCar) }
+        }
+        .sheet(isPresented: $appState.showingNewGarage) {
+            GarageFormView(garage: nil) { newGarage in selection = .garage(newGarage) }
         }
         .sheet(isPresented: Binding(get: { appState.showingNewIntervention && selectedCar != nil },
                                     set: { appState.showingNewIntervention = $0 })) {
@@ -100,6 +113,14 @@ struct ContentView: View {
         selectedIntervention = nil
         DispatchQueue.main.async {
             do { try DeletionService.delete(intervention, in: context) }
+            catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
+        }
+    }
+
+    private func delete(_ garage: Garage) {
+        selection = .dashboard
+        DispatchQueue.main.async {
+            do { try GarageService.delete(garage, in: context) }
             catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
         }
     }
