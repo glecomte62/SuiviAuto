@@ -6,9 +6,12 @@ struct ReadingFormView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var date = Date.now
-    @State private var mileage: Int?
+    @State private var mileageText = ""
     @State private var showWarning = false
     @State private var errorMessage: String?
+
+    /// nil si vide ou invalide (négatif, lettres…) : Enregistrer reste désactivé.
+    private var mileage: Int? { NumberInput.parseInt(mileageText) }
 
     private var lastKnown: Int? { CarAnalytics.lastKnownMileage(for: car, onOrBefore: date) }
 
@@ -17,7 +20,7 @@ struct ReadingFormView: View {
             Text("Nouveau relevé km — \(car.name)").font(.title2.bold()).padding([.top, .horizontal])
             Form {
                 DatePicker("Date", selection: $date, displayedComponents: .date)
-                TextField("Kilométrage", value: $mileage, format: .number,
+                TextField("Kilométrage", text: $mileageText,
                           prompt: Text(lastKnown.map { "dernier : \(Fmt.km($0))" } ?? "km"))
             }
             .formStyle(.grouped)

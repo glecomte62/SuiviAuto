@@ -15,6 +15,7 @@ struct InterventionDetailView: View {
     @State private var dropTargeted = false
     @State private var previewURL: URL?
     @State private var selectedDoc: StoredDocument?
+    @FocusState private var gridFocused: Bool
 
     private var tint: Color { Color(hex: intervention.car?.colorHex ?? "#2E86AB") }
 
@@ -56,7 +57,9 @@ struct InterventionDetailView: View {
             }
         }
         .sheet(isPresented: $editing) {
-            if let car = intervention.car { InterventionFormView(car: car, intervention: intervention) }
+            if let car = intervention.car {
+                InterventionFormView(car: car, intervention: intervention).tracksSheetPresentation()
+            }
         }
         .confirmationDialog("Supprimer cette intervention et ses \(intervention.documents.count) document(s) ?",
                             isPresented: $confirmDelete) {
@@ -129,8 +132,14 @@ struct InterventionDetailView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 116), spacing: 12)], spacing: 12) {
                         ForEach(intervention.documents.sorted { $0.addedAt < $1.addedAt }) { doc in
                             DocumentThumbnail(document: doc, isSelected: selectedDoc == doc)
-                                .onTapGesture(count: 2) { open(doc) }
-                                .onTapGesture { selectedDoc = doc }
+                                .onTapGesture(count: 2) {
+                                    selectedDoc = doc
+                                    open(doc)
+                                }
+                                .onTapGesture {
+                                    selectedDoc = doc
+                                    gridFocused = true
+                                }
                                 .contextMenu {
                                     Button("Coup d'œil") { preview(doc) }
                                     Button("Ouvrir") { open(doc) }
@@ -143,6 +152,7 @@ struct InterventionDetailView: View {
                         }
                     }
                     .focusable()
+                    .focused($gridFocused)
                     .focusEffectDisabled()
                     .onKeyPress(.space) {
                         guard let doc = selectedDoc else { return .ignored }

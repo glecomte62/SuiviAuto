@@ -7,12 +7,21 @@ struct RuleFormView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var label = ""
-    @State private var intervalKm: Int?
-    @State private var intervalMonths: Int?
+    @State private var intervalKmText = ""
+    @State private var intervalMonthsText = ""
     @State private var errorMessage: String?
+
+    private var intervalKm: Int? { NumberInput.parseInt(intervalKmText) }
+    private var intervalMonths: Int? { NumberInput.parseInt(intervalMonthsText) }
+
+    /// Champ facultatif : vide accepté, texte non numérique refusé.
+    private func isBlankOrValid(_ text: String) -> Bool {
+        text.trimmingCharacters(in: .whitespaces).isEmpty || NumberInput.parseInt(text) != nil
+    }
 
     private var isValid: Bool {
         !label.trimmingCharacters(in: .whitespaces).isEmpty
+        && isBlankOrValid(intervalKmText) && isBlankOrValid(intervalMonthsText)
         && ((intervalKm ?? 0) > 0 || (intervalMonths ?? 0) > 0)
     }
 
@@ -21,8 +30,8 @@ struct RuleFormView: View {
             Text(rule == nil ? "Nouvelle règle d'entretien" : "Modifier la règle").font(.title2.bold()).padding([.top, .horizontal])
             Form {
                 TextField("Nom", text: $label, prompt: Text("ex. Filtre à air"))
-                TextField("Tous les … km", value: $intervalKm, format: .number, prompt: Text("facultatif"))
-                TextField("Tous les … mois", value: $intervalMonths, format: .number, prompt: Text("facultatif"))
+                TextField("Tous les … km", text: $intervalKmText, prompt: Text("facultatif"))
+                TextField("Tous les … mois", text: $intervalMonthsText, prompt: Text("facultatif"))
                 Text("Renseignez au moins un des deux intervalles. Le premier atteint déclenche l'alerte.")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -36,7 +45,11 @@ struct RuleFormView: View {
         }
         .frame(width: 420)
         .onAppear {
-            if let rule { label = rule.label; intervalKm = rule.intervalKm; intervalMonths = rule.intervalMonths }
+            if let rule {
+                label = rule.label
+                intervalKmText = rule.intervalKm.map(String.init) ?? ""
+                intervalMonthsText = rule.intervalMonths.map(String.init) ?? ""
+            }
         }
         .alert("Erreur", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}

@@ -38,7 +38,7 @@ struct CarInfoView: View {
             }
             .padding(14)
         }
-        .sheet(isPresented: $editing) { CarFormView(car: car) }
+        .sheet(isPresented: $editing) { CarFormView(car: car).tracksSheetPresentation() }
         .confirmationDialog("Supprimer « \(car.name) » ?", isPresented: $confirmDelete) {
             Button("Supprimer définitivement", role: .destructive) { onDelete() }
         } message: {

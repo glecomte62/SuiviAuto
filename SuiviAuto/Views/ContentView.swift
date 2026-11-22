@@ -35,6 +35,7 @@ struct ContentView: View {
             if let car = selectedCar {
                 if carTab == .interventions, let i = selectedIntervention, i.car == car {
                     InterventionDetailView(intervention: i, onDelete: { delete(i) })
+                        .id(i.persistentModelID)
                 } else {
                     CarSummaryView(car: car)
                 }

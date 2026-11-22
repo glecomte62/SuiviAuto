@@ -17,12 +17,14 @@ struct CarFormView: View {
     @State private var firstRegistrationDate = Date.now
     @State private var usedPurchase = false
     @State private var purchaseDate = Date.now
-    @State private var purchaseMileage: Int?
+    @State private var purchaseMileageText = ""
     @State private var fuel: FuelType = .essence
     @State private var colorHex = CarPalette.colors[0]
     @State private var photo: Data?
     @State private var pickingPhoto = false
     @State private var errorMessage: String?
+
+    private var purchaseMileage: Int? { NumberInput.parseInt(purchaseMileageText) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -64,7 +66,7 @@ struct CarFormView: View {
                     Toggle("Achetée d'occasion", isOn: $usedPurchase)
                     if usedPurchase {
                         DatePicker("Date d'achat", selection: $purchaseDate, displayedComponents: .date)
-                        TextField("Km à l'achat", value: $purchaseMileage, format: .number, prompt: Text("obligatoire"))
+                        TextField("Km à l'achat", text: $purchaseMileageText, prompt: Text("obligatoire"))
                     }
                     Picker("Carburant", selection: $fuel) {
                         ForEach(FuelType.allCases) { Text($0.label).tag($0) }
@@ -126,7 +128,7 @@ struct CarFormView: View {
         firstRegistrationDate = car.firstRegistrationDate; fuel = car.fuel; colorHex = car.colorHex; photo = car.photo
         usedPurchase = car.isUsedPurchase
         purchaseDate = car.purchaseDate ?? Date.now
-        purchaseMileage = car.purchaseMileage
+        purchaseMileageText = car.purchaseMileage.map(String.init) ?? ""
     }
 
     private func save() {

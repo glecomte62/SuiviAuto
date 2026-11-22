@@ -9,7 +9,7 @@ struct InterventionFormView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var date = Date.now
-    @State private var mileage: Int?
+    @State private var mileageText = ""
     @State private var kind: InterventionKind = .entretien
     @State private var title = ""
     @State private var garage = ""
@@ -20,6 +20,9 @@ struct InterventionFormView: View {
     @State private var ruleKey = ""
     @State private var showLowMileageWarning = false
     @State private var errorMessage: String?
+
+    /// Texte brut converti à la volée (voir `NumberInput`).
+    private var mileage: Int? { NumberInput.parseInt(mileageText) }
 
     private var lastKnown: Int? {
         CarAnalytics.lastKnownMileage(for: car, onOrBefore: date, excluding: intervention)
@@ -40,7 +43,7 @@ struct InterventionFormView: View {
                     .pickerStyle(.segmented)
                     TextField("Titre", text: $title, prompt: Text("ex. Vidange + filtres"))
                     DatePicker("Date", selection: $date, displayedComponents: .date)
-                    TextField("Kilométrage", value: $mileage, format: .number, prompt: Text(lastKnown.map { "dernier : \(Fmt.km($0))" } ?? "km"))
+                    TextField("Kilométrage", text: $mileageText, prompt: Text(lastKnown.map { "dernier : \(Fmt.km($0))" } ?? "km"))
                     TextField("Garage", text: $garage)
                     TextField("Montant (€)", text: $amountText, prompt: Text("ex. 189,90"))
                 }
@@ -83,7 +86,7 @@ struct InterventionFormView: View {
 
     private func load() {
         guard let i = intervention else { return }
-        date = i.date; mileage = i.mileage; kind = i.kind; title = i.title; garage = i.garage
+        date = i.date; mileageText = String(i.mileage); kind = i.kind; title = i.title; garage = i.garage
         amountText = i.amountCents.map(Money.editString(cents:)) ?? ""
         status = i.status; notes = i.notes; ctResult = i.ctResult ?? .favorable; ruleKey = i.ruleKey ?? ""
     }

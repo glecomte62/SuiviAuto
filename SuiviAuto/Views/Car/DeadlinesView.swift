@@ -42,8 +42,8 @@ struct DeadlinesView: View {
         .toolbar {
             Button { creating = true } label: { Label("Nouvelle échéance", systemImage: "plus") }
         }
-        .sheet(item: $editing) { DeadlineFormView(car: car, deadline: $0) }
-        .sheet(isPresented: $creating) { DeadlineFormView(car: car, deadline: nil) }
+        .sheet(item: $editing) { DeadlineFormView(car: car, deadline: $0).tracksSheetPresentation() }
+        .sheet(isPresented: $creating) { DeadlineFormView(car: car, deadline: nil).tracksSheetPresentation() }
     }
 
     /// Annuelle : avance d'un an. Ponctuelle : supprimée.

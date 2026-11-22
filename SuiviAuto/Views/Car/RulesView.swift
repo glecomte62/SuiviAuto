@@ -45,8 +45,8 @@ struct RulesView: View {
         .toolbar {
             Button { creating = true } label: { Label("Nouvelle règle", systemImage: "plus") }
         }
-        .sheet(item: $editingRule) { RuleFormView(car: car, rule: $0) }
-        .sheet(isPresented: $creating) { RuleFormView(car: car, rule: nil) }
+        .sheet(item: $editingRule) { RuleFormView(car: car, rule: $0).tracksSheetPresentation() }
+        .sheet(isPresented: $creating) { RuleFormView(car: car, rule: nil).tracksSheetPresentation() }
     }
 
     private func remove(_ rule: MaintenanceRule) {
