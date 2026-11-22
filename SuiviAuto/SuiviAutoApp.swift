@@ -34,6 +34,14 @@ struct SuiviAutoApp: App {
         } catch {
             Self.failToOpenDatabase(error)
         }
+        if !Self.isRunningTests {
+            do {
+                try GarageMigrator.run(in: container.mainContext)
+            } catch {
+                let message = "La conversion des garages a échoué : \(error.localizedDescription). Les noms restent affichés tels quels."
+                launchMessage = [launchMessage, message].compactMap { $0 }.joined(separator: "\n\n")
+            }
+        }
         _appState = State(initialValue: AppState(errorMessage: launchMessage))
     }
 
