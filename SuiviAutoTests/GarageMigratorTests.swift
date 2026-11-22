@@ -64,6 +64,31 @@ final class GarageMigratorTests: XCTestCase {
         XCTAssertNil(i.garageRef)
     }
 
+    func testSortsByMileageWhenSameDate() throws {
+        let second = Intervention(date: T.date("2024-01-01"), mileage: 20, kind: .entretien)
+        second.garage = "GARAGE DU NORD"
+        ctx.insert(second); second.car = car
+        let first = Intervention(date: T.date("2024-01-01"), mileage: 10, kind: .entretien)
+        first.garage = "Garage du Nord"
+        ctx.insert(first); first.car = car
+
+        try GarageMigrator.run(in: ctx)
+        XCTAssertEqual(try garages().map(\.name), ["Garage du Nord"])
+    }
+
+    func testLinkedRowIsMarkedButNotCounted() throws {
+        let a = Garage(name: "A")
+        ctx.insert(a)
+        let i = add("2024-01-01", garage: "Speedy")
+        i.garageRef = a
+
+        XCTAssertEqual(try GarageMigrator.run(in: ctx), GarageMigrator.Result(created: 0, linked: 0))
+        XCTAssertEqual(try garages().map(\.name), ["A"])
+        XCTAssertTrue(i.garageRef === a)
+        XCTAssertTrue(i.garageTextMigrated)
+        XCTAssertEqual(i.garage, "Speedy")
+    }
+
     func testOpensVersion10StoreAndConverts() throws {
         let fm = FileManager.default
         let tmp = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)

@@ -10,8 +10,10 @@ enum GarageMigrator {
 
     @discardableResult
     static func run(in context: ModelContext) throws -> Result {
-        let pending = try context.fetch(FetchDescriptor<Intervention>(sortBy: [SortDescriptor(\.date)]))
-            .filter { $0.garageRef == nil && !$0.garageTextMigrated }
+        // Tri date puis km : la première graphie retenue est déterministe.
+        let pending = try context.fetch(FetchDescriptor<Intervention>(
+            predicate: #Predicate { !$0.garageTextMigrated },
+            sortBy: [SortDescriptor(\.date), SortDescriptor(\.mileage)]))
         guard !pending.isEmpty else { return Result(created: 0, linked: 0) }
 
         var byKey: [String: Garage] = [:]
@@ -24,6 +26,8 @@ enum GarageMigrator {
         var linked = 0
         for intervention in pending {
             intervention.garageTextMigrated = true
+            // Déjà liée (ex. choisie dans le formulaire) : seulement marquée, pour ne plus être relue.
+            guard intervention.garageRef == nil else { continue }
             let cleaned = Garage.cleanedName(intervention.garage)
             guard !cleaned.isEmpty else { continue }
             let key = Garage.nameKey(cleaned)

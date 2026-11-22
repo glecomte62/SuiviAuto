@@ -33,8 +33,18 @@ final class Garage {
         name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
-    /// Clé de regroupement : nom nettoyé, insensible à la casse et aux accents.
+    private static let apostrophes: Set<Character> = ["’", "‘", "ʼ", "´", "`"]
+    private static let hyphens: Set<Character> = ["-", "‐", "‑", "‒", "–", "—"]
+
+    /// Clé de regroupement : nom nettoyé, insensible à la casse et aux accents ;
+    /// apostrophes typographiques ramenées à « ' », tirets traités comme des espaces.
     static func nameKey(_ name: String) -> String {
-        cleanedName(name).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "fr_FR"))
+        let normalized = String(name.map { ch -> Character in
+            if apostrophes.contains(ch) { return "'" }
+            if hyphens.contains(ch) { return " " }
+            return ch
+        })
+        return cleanedName(normalized)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "fr_FR"))
     }
 }

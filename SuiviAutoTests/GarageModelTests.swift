@@ -9,6 +9,15 @@ final class GarageModelTests: XCTestCase {
         XCTAssertNotEqual(Garage.nameKey("Garage du Nord"), Garage.nameKey("Garage du Sud"))
     }
 
+    func testNameKeyNormalizesApostrophesAndHyphens() {
+        XCTAssertEqual(Garage.nameKey("Garage d’Arras"), "garage d'arras")
+        for apostrophe in ["‘", "ʼ", "´", "`"] {
+            XCTAssertEqual(Garage.nameKey("Garage d\(apostrophe)Arras"), "garage d'arras")
+        }
+        XCTAssertEqual(Garage.nameKey("Saint-Omer Auto"), "saint omer auto")
+        XCTAssertEqual(Garage.nameKey("Saint – Omer  Auto"), "saint omer auto")
+    }
+
     func testRatingIsClamped() {
         let g = Garage(name: "A")
         g.rating = 9
