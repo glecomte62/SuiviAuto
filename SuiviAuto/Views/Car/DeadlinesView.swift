@@ -54,9 +54,11 @@ struct DeadlinesView: View {
                     StatusBadge(status: row.due.status)
                     Button("Fait ✓…") { completing = d }
                         .buttonStyle(.bordered)
+                        .accessibilityLabel("Marquer comme fait…")
                         .help("Saisir l'intervention correspondante : l'échéance sera validée à son enregistrement")
                 }
                 .padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) { editing = d }
                 .contextMenu {

@@ -33,6 +33,16 @@ final class CarnetTests: XCTestCase {
         return i
     }
 
+    func testFileSafeName() {
+        XCTAssertEqual(Carnet.fileSafeName("Clio 4"), "Clio 4")
+        XCTAssertEqual(Carnet.fileSafeName("Peugeot 208/GT: rouge"), "Peugeot 208-GT- rouge")
+        XCTAssertEqual(Carnet.fileSafeName("  Zoé \n"), "Zoé")
+        XCTAssertEqual(Carnet.fileSafeName("..cachée"), "cachée")
+        XCTAssertEqual(Carnet.fileSafeName(" . voiture"), "voiture")
+        XCTAssertEqual(Carnet.fileSafeName("   "), "voiture")
+        XCTAssertEqual(Carnet.fileSafeName("..."), "voiture")
+    }
+
     func testInvoicesOnlyNewestFirst() {
         let e = Carnet.entries(for: car, query: CarnetQuery(), calendar: T.calendar)
         XCTAssertEqual(e.map(\.mileage), [58_000, 52_000, 40_000])

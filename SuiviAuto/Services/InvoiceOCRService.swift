@@ -16,9 +16,14 @@ enum InvoiceOCRService {
     static let minTextLayerCharsPerPage = 20
     private static let maxRenderSide: CGFloat = 4000
 
+    /// Lève `CancellationError` si l'appelant est annulé (même quand la lecture a fini entre-temps),
+    /// et `OCRError.unreadable` (ou l'erreur de Vision) si le fichier ne peut pas être lu.
     static func analyze(fileAt url: URL, calendar: Calendar = .current) async throws -> InvoiceExtraction {
+        try Task.checkCancellation()
         let task = Task.detached(priority: .userInitiated) { try extract(at: url, calendar: calendar) }
-        return try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
+        let result = try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
+        try Task.checkCancellation()
+        return result
     }
 
     private static func extract(at url: URL, calendar: Calendar) throws -> InvoiceExtraction {

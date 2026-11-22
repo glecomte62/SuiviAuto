@@ -23,6 +23,15 @@ enum Carnet {
             .sorted { ($0.date, $0.mileage) > ($1.date, $1.mileage) }
     }
 
+    /// Nom de voiture utilisable dans un nom de fichier d'export (« / » et « : » remplacés, pas de fichier caché).
+    static func fileSafeName(_ name: String) -> String {
+        var s = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        while s.hasPrefix(".") { s.removeFirst() }
+        s = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        return s.isEmpty ? "voiture" : s
+    }
+
     static func totalCents(_ entries: [Intervention]) -> Int {
         entries.compactMap(\.amountCents).reduce(0, +)
     }

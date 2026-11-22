@@ -31,8 +31,9 @@ struct CarContentView: View {
             .padding(10)
             Divider()
             switch tab {
-            case .interventions: InterventionListView(car: car, selection: $selectedIntervention)
-            case .carnet: CarnetView(car: car, selection: $selectedIntervention)
+            // Recherche et filtres propres à chaque voiture : remis à zéro au changement de voiture.
+            case .interventions: InterventionListView(car: car, selection: $selectedIntervention).id(car.persistentModelID)
+            case .carnet: CarnetView(car: car, selection: $selectedIntervention).id(car.persistentModelID)
             case .kilometrage: MileageView(car: car)
             case .regles: RulesView(car: car)
             case .echeances: DeadlinesView(car: car)

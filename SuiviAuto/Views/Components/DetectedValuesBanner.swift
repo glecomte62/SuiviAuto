@@ -4,6 +4,8 @@ import SwiftUI
 struct DetectedValuesBanner: View {
     /// nil pendant la lecture.
     let extraction: InvoiceExtraction?
+    /// Fichier illisible (distinct de « rien de reconnu »).
+    var failureMessage: String? = nil
     let onApply: () -> Void
     let onDismiss: () -> Void
 
@@ -17,7 +19,10 @@ struct DetectedValuesBanner: View {
                     .shadow(color: .purple.opacity(0.4), radius: 3, y: 2))
             VStack(alignment: .leading, spacing: 6) {
                 Text("Valeurs détectées").font(.headline)
-                if let extraction {
+                if let failureMessage {
+                    Label(failureMessage, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                } else if let extraction {
                     if extraction.isEmpty {
                         Text("Aucune information reconnue dans ce document").foregroundStyle(.secondary)
                     } else {

@@ -19,6 +19,8 @@ struct DeadlineFormView: View {
     @State private var saved = false
     @State private var loaded = false
     @State private var errorMessage: String?
+    /// Empêche un double enregistrement (double clic, Entrée répétée).
+    @State private var saving = false
 
     private var targetMileage: Int? { NumberInput.parseInt(targetMileageText) }
     private var intervalKm: Int? { NumberInput.parseInt(intervalKmText) }
@@ -67,11 +69,11 @@ struct DeadlineFormView: View {
                 .keyboardShortcut(.cancelAction)
                 Button("Enregistrer") { save() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(!isValid)
+                    .disabled(!isValid || saving)
             }
             .padding()
         }
-        .frame(width: 480)
+        .frame(minWidth: 480, idealWidth: 480, maxWidth: 480, minHeight: 340, idealHeight: 480, maxHeight: 680)
         .onAppear(perform: load)
         .onDisappear { if !saved { pending.discard() } }
         .alert("Erreur", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
@@ -90,6 +92,7 @@ struct DeadlineFormView: View {
     }
 
     private func save() {
+        guard !saving else { return }
         if let deadline, !DeadlineService.isStillPresent(deadline, in: car) {
             errorMessage = DeadlineService.changedElsewhereMessage
             return
@@ -116,6 +119,7 @@ struct DeadlineFormView: View {
             target.intervalKm = (intervalKm ?? 0) > 0 ? intervalKm : nil
             target.repeatsYearly = false
         }
+        saving = true
         let attached = pending.attach(to: target, in: context)
         do {
             try DeletionService.save(context, deleting: removedExisting)
@@ -125,6 +129,7 @@ struct DeadlineFormView: View {
         } catch {
             // Rollback déjà fait : les documents ajoutés repassent en attente, les retraits restent à appliquer.
             pending.restore(attached)
+            saving = false
             errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
     }

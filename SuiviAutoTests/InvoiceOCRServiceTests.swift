@@ -44,6 +44,31 @@ final class InvoiceOCRServiceTests: XCTestCase {
         return url
     }
 
+    func testUnreadableFileThrows() async throws {
+        let url = dir.appendingPathComponent("abime.pdf")
+        try Data("pas un pdf".utf8).write(to: url)
+        do {
+            _ = try await InvoiceOCRService.analyze(fileAt: url, calendar: T.calendar)
+            XCTFail("un fichier illisible doit lever une erreur")
+        } catch {
+            XCTAssertTrue(error is InvoiceOCRService.OCRError)
+        }
+    }
+
+    func testCancelledAnalysisThrowsCancellation() async throws {
+        let url = try makePDF()
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await InvoiceOCRService.analyze(fileAt: url, calendar: T.calendar)
+        }
+        do {
+            _ = try await task.value
+            XCTFail("une analyse annulée ne doit pas renvoyer de résultat")
+        } catch {
+            XCTAssertTrue(error is CancellationError)
+        }
+    }
+
     func testPDFTextLayer() async throws {
         let r = try await InvoiceOCRService.analyze(fileAt: try makePDF(), calendar: T.calendar)
         XCTAssertEqual(r.amountCents, 18_990)

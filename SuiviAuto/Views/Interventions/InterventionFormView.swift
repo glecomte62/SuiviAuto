@@ -40,6 +40,12 @@ struct InterventionFormView: View {
     @State private var showingDetected = false
     @State private var extraction: InvoiceExtraction?
     @State private var analysisID = UUID()
+    @State private var analysisTask: Task<Void, Never>?
+    /// Fichier en cours d'analyse : son retrait annule la lecture.
+    @State private var analyzedURL: URL?
+    @State private var analysisFailure: String?
+    /// Empêche un double enregistrement (double clic, Entrée répétée).
+    @State private var saving = false
     @State private var saved = false
     @State private var errorMessage: String?
     /// `onAppear` se redéclenche à la fermeture d'une feuille imbriquée : ne charger qu'une fois.
@@ -59,7 +65,8 @@ struct InterventionFormView: View {
             Text(intervention == nil ? "Nouvelle intervention" : "Modifier l'intervention")
                 .font(.title2.bold()).padding([.top, .horizontal])
             if showingDetected {
-                DetectedValuesBanner(extraction: extraction, onApply: applyExtraction, onDismiss: dismissExtraction)
+                DetectedValuesBanner(extraction: extraction, failureMessage: analysisFailure,
+                                         onApply: applyExtraction, onDismiss: dismissExtraction)
                     .padding([.top, .horizontal])
             }
             Form {
@@ -126,7 +133,9 @@ struct InterventionFormView: View {
                     }
                     TextField("Notes", text: $notes, axis: .vertical).lineLimit(3...6)
                 }
-                AttachmentsSection(pending: pending, onAnalyze: analyze)
+                AttachmentsSection(pending: pending, onAnalyze: analyze, onRemovePending: { url in
+                    if url == analyzedURL { dismissExtraction() }
+                })
             }
             .formStyle(.grouped)
             HStack {
@@ -138,15 +147,20 @@ struct InterventionFormView: View {
                 .keyboardShortcut(.cancelAction)
                 Button("Enregistrer") { attemptSave() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(mileage == nil)
+                    .disabled(mileage == nil || saving)
             }
             .padding()
         }
-        .frame(width: 560)
+        // Hauteur bornée : le formulaire groupé défile au lieu de dépasser de l'écran.
+        .frame(minWidth: 560, idealWidth: 560, maxWidth: 560, minHeight: 420, idealHeight: 640, maxHeight: 760)
         .onAppear(perform: load)
         .onChange(of: completingDeadline) { _, new in completingSnapshot = new.map(DeadlineSnapshot.init) }
         // Ignoré quand c'est la feuille « Nouveau garage » qui masque ce formulaire.
-        .onDisappear { if !saved && !creatingGarage { pending.discard() } }
+        .onDisappear {
+            guard !creatingGarage else { return }
+            analysisTask?.cancel()
+            if !saved { pending.discard() }
+        }
         .confirmationDialog("Kilométrage inférieur au dernier connu", isPresented: $showLowMileageWarning) {
             Button("Enregistrer quand même") { save() }
             Button("Corriger", role: .cancel) {}
@@ -191,6 +205,7 @@ struct InterventionFormView: View {
     }
 
     private func attemptSave() {
+        guard !saving else { return }
         let trimmed = amountText.trimmingCharacters(in: .whitespaces)
         if !trimmed.isEmpty && Money.parse(trimmed) == nil {
             errorMessage = "Montant invalide. Exemple : 189,90"
@@ -204,6 +219,7 @@ struct InterventionFormView: View {
     }
 
     private func save() {
+        guard !saving else { return }
         if let deadline = completingDeadline {
             guard let snapshot = completingSnapshot,
                   DeadlineService.isStillPending(deadline, snapshot: snapshot, in: car) else {
@@ -243,6 +259,7 @@ struct InterventionFormView: View {
         target.ruleKey = ruleKey.isEmpty ? nil : ruleKey
         target.operations = InterventionDraft.storedOperations(operations, custom: customOperation)
         target.customOperation = customOperation.trimmingCharacters(in: .whitespacesAndNewlines)
+        saving = true
         let attached = pending.attach(to: target, in: context)
         do {
             if let deadline = completingDeadline, status == .facture {
@@ -258,6 +275,7 @@ struct InterventionFormView: View {
             context.rollback()
             // Les documents insérés ont disparu avec le rollback : on les remet en attente pour un nouvel essai.
             pending.restore(attached)
+            saving = false
             errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
     }
@@ -280,15 +298,31 @@ struct InterventionFormView: View {
     // MARK: - Lecture automatique
 
     private func analyze(_ url: URL) {
+        analysisTask?.cancel()
         let id = UUID()
         analysisID = id
+        analyzedURL = url
         extraction = nil
+        analysisFailure = nil
         showingDetected = true
-        Task {
-            let result = (try? await InvoiceOCRService.analyze(fileAt: url)) ?? InvoiceExtraction()
+        analysisTask = Task {
+            let result: InvoiceExtraction?
+            do {
+                result = try await InvoiceOCRService.analyze(fileAt: url)
+            } catch is CancellationError {
+                return
+            } catch {
+                result = nil
+            }
             // Une analyse plus récente (ou « Ignorer ») a pris le relais.
-            guard analysisID == id, showingDetected else { return }
-            extraction = result
+            guard !Task.isCancelled, analysisID == id, showingDetected else { return }
+            if let result {
+                extraction = result
+                AccessibilityNotification.Announcement("Valeurs détectées").post()
+            } else {
+                analysisFailure = "Ce document ne peut pas être lu."
+                AccessibilityNotification.Announcement("Ce document ne peut pas être lu.").post()
+            }
         }
     }
 
@@ -304,6 +338,10 @@ struct InterventionFormView: View {
     }
 
     private func dismissExtraction() {
+        analysisTask?.cancel()
+        analysisTask = nil
+        analyzedURL = nil
+        analysisFailure = nil
         analysisID = UUID()
         showingDetected = false
         extraction = nil

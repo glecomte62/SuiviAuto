@@ -84,9 +84,7 @@ struct CarnetView: View {
         .padding(10)
     }
 
-    private var fileSafeName: String {
-        car.name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
-    }
+    private var fileSafeName: String { Carnet.fileSafeName(car.name) }
 
     private func exportPDF(_ entries: [Intervention]) {
         let panel = NSSavePanel()
@@ -145,5 +143,6 @@ private struct CarnetRow: View {
             }
         }
         .padding(.vertical, 3)
+        .accessibilityElement(children: .combine)
     }
 }
