@@ -28,8 +28,9 @@ final class DeadlineV2Tests: XCTestCase {
         let e = estimator([("2026-01-01", 10_000), ("2026-01-11", 11_000)], now: "2026-01-11")
         XCTAssertEqual(DeadlineScheduler.due(mode: .km, dueDate: .distantPast, targetMileage: 11_800,
                                              estimator: e, now: T.date("2026-01-11"), calendar: T.calendar).status, .soon)
-        XCTAssertEqual(DeadlineScheduler.due(mode: .km, dueDate: .distantPast, targetMileage: 10_500,
-                                             estimator: e, now: T.date("2026-01-11"), calendar: T.calendar).status, .overdue)
+        let overdue = DeadlineScheduler.due(mode: .km, dueDate: .distantPast, targetMileage: 10_500,
+                                            estimator: e, now: T.date("2026-01-11"), calendar: T.calendar)
+        XCTAssertEqual(overdue, DeadlineDue(dueDate: nil, dueKm: 10_500, remainingKm: -500, status: .overdue))
     }
 
     func testKmModeWithoutDataIsOk() {
@@ -59,6 +60,69 @@ final class DeadlineV2Tests: XCTestCase {
         let kmOnce = Deadline(label: "Révision", dueDate: .now, repeatsYearly: false)
         kmOnce.mode = .km; kmOnce.targetMileage = 60_000
         XCTAssertEqual(kmOnce.complete(on: .now, mileage: 60_100, calendar: T.calendar), .remove)
+    }
+
+    func testKmCompleteWithoutTargetNorMileageKeepsTargetUnknown() {
+        let d = Deadline(label: "Pneus", dueDate: .now, repeatsYearly: false)
+        d.mode = .km; d.intervalKm = 40_000
+        XCTAssertEqual(d.complete(on: .now, mileage: nil, calendar: T.calendar), .advanced)
+        XCTAssertNil(d.targetMileage)
+        XCTAssertEqual(d.complete(on: .now, mileage: 50_000, calendar: T.calendar), .advanced)
+        XCTAssertEqual(d.targetMileage, 90_000)
+    }
+
+    /// Fabrique une voiture, une échéance (avec un devis joint) et une intervention dans un contexte en mémoire.
+    func makeScenario(_ ctx: ModelContext, deadline d: Deadline, interventionMileage: Int,
+                      sameCar: Bool = true) throws -> (Intervention, StoredDocument) {
+        let car = Car(name: "Clio", firstRegistrationDate: T.date("2022-05-01"))
+        ctx.insert(car)
+        ctx.insert(d); d.car = car
+        let doc = StoredDocument(fileName: "a.pdf", originalName: "devis.pdf", kind: .pdf)
+        ctx.insert(doc); doc.deadline = d
+        let i = Intervention(date: T.date("2026-02-28"), mileage: interventionMileage, kind: .entretien)
+        ctx.insert(i)
+        if sameCar { i.car = car } else {
+            let other = Car(name: "Twingo", firstRegistrationDate: T.date("2021-01-01"))
+            ctx.insert(other); i.car = other
+        }
+        try ctx.save()
+        return (i, doc)
+    }
+
+    func testCompleteWithoutInterventionMileageAddsIntervalToTarget() throws {
+        let ctx = try T.makeContext()
+        let d = Deadline(label: "Pneus", dueDate: .now, repeatsYearly: false)
+        d.mode = .km; d.targetMileage = 90_000; d.intervalKm = 40_000
+        let (i, _) = try makeScenario(ctx, deadline: d, interventionMileage: 0)
+        try DeadlineService.complete(d, with: i, in: ctx, calendar: T.calendar)
+        XCTAssertEqual(d.targetMileage, 130_000)
+    }
+
+    func testCompleteRejectsInterventionOfAnotherCar() throws {
+        let ctx = try T.makeContext()
+        let d = Deadline(label: "Garantie", dueDate: T.date("2026-03-01"), repeatsYearly: false)
+        let (i, doc) = try makeScenario(ctx, deadline: d, interventionMileage: 50_000, sameCar: false)
+        XCTAssertThrowsError(try DeadlineService.complete(d, with: i, in: ctx, calendar: T.calendar)) {
+            XCTAssertEqual($0 as? DeadlineService.CompletionError, .differentCar)
+            XCTAssertFalse($0.localizedDescription.isEmpty)
+        }
+        XCTAssertTrue(doc.deadline === d)
+        XCTAssertNil(doc.intervention)
+        XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<Deadline>()), 1)
+    }
+
+    func testCompleteYearlyDeadlineKeepsItAndMovesDocuments() throws {
+        let ctx = try T.makeContext()
+        let d = Deadline(label: "Assurance", dueDate: T.date("2026-03-01"), repeatsYearly: true)
+        let (i, doc) = try makeScenario(ctx, deadline: d, interventionMileage: 50_000)
+        try DeadlineService.complete(d, with: i, in: ctx, calendar: T.calendar)
+        XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<Deadline>()), 1)
+        XCTAssertEqual(d.dueDate, T.date("2027-03-01"))
+        XCTAssertEqual(d.documents.count, 0)
+        XCTAssertTrue(doc.intervention === i)
+        XCTAssertNil(doc.deadline)
+        XCTAssertEqual(i.documents.count, 1)
+        XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<StoredDocument>()), 1)
     }
 
     func testAggregatorUsesKmMode() throws {

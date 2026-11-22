@@ -8,33 +8,29 @@ import SwiftData
 enum UpgradeBackup {
     static let folderPrefixBase = "SuiviAuto-avant-"
 
-    /// Modèle Core Data équivalent au schéma SwiftData actuel.
-    private static let currentModel: NSManagedObjectModel? =
+    /// Modèle Core Data équivalent au schéma SwiftData actuel (nil si la construction échoue).
+    static let currentModel: NSManagedObjectModel? =
         NSManagedObjectModel.makeManagedObjectModel(for: SchemaModels.all)
 
-    /// Entités attendues (repli si le modèle n'a pas pu être construit).
-    private static var expectedEntityNames: Set<String> {
-        Set(SchemaModels.all.map { String(describing: $0) })
-    }
-
     /// Vrai si la base peut être ouverte telle quelle par le schéma actuel (aucune migration).
-    static func isCompatibleWithCurrentModel(storeURL: URL) throws -> Bool {
+    /// Comparaison des empreintes de version de chaque entité (`NSStoreModelVersionHashesKey`) avec celles du modèle :
+    /// une 1.1 a les mêmes entités qu'une 2.0 mais des attributs différents, donc des empreintes différentes.
+    /// Sans modèle, rien ne prouve la compatibilité : on répond « non » pour que la copie de sécurité soit faite.
+    static func isCompatibleWithCurrentModel(storeURL: URL, model: NSManagedObjectModel? = currentModel) throws -> Bool {
         let metadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(type: .sqlite, at: storeURL)
-        if let model = currentModel {
-            return model.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata)
-        }
-        let hashes = metadata[NSStoreModelVersionHashesKey] as? [String: Any] ?? [:]
-        return expectedEntityNames.isSubset(of: Set(hashes.keys))
+        guard let model else { return false }
+        return model.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata)
     }
 
     /// Si la base existe et va être migrée, la copie (de façon cohérente) avec son dossier de données externes
     /// dans « SuiviAuto-avant-<version>-<date> », à côté du dossier de l'app. Renvoie le dossier créé, ou nil si rien à faire.
     @discardableResult
     static func backupIfNeedsMigration(storeURL: URL = AppPaths.storeURL, now: Date = .now,
-                                       version: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "nouvelle-version") throws -> URL? {
+                                       version: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "nouvelle-version",
+                                       model: NSManagedObjectModel? = currentModel) throws -> URL? {
         let fm = FileManager.default
         guard fm.fileExists(atPath: storeURL.path) else { return nil }
-        guard try !isCompatibleWithCurrentModel(storeURL: storeURL) else { return nil }
+        guard try !isCompatibleWithCurrentModel(storeURL: storeURL, model: model) else { return nil }
 
         let baseDir = storeURL.deletingLastPathComponent()
         let folder = BackupService.freeURL(in: baseDir.deletingLastPathComponent(),

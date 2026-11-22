@@ -44,4 +44,14 @@ final class NotificationPlannerTests: XCTestCase {
         XCTAssertFalse(plans.isEmpty)
         XCTAssertTrue(plans.allSatisfy { !$0.body.contains("estimée") })
     }
+
+    func testKmDeadlineSaysEstimatedDateAndMileage() {
+        let i = DueItem(id: "d", carName: "Clio", carColorHex: "#000000", label: "Pneus", detail: nil,
+                        dueDate: T.date("2026-03-01"), dueKm: 90_000, status: .ok, source: .deadline)
+        let plans = NotificationPlanner.plan(items: [i], now: T.date("2026-01-01"), calendar: T.calendar)
+        XCTAssertEqual(plans.map(\.id), ["d-J30", "d-J7"])
+        XCTAssertEqual(plans.map(\.fireDate), [T.date("2026-01-30", hour: 9), T.date("2026-02-22", hour: 9)])
+        let expected = "Échéance estimée le \(Fmt.date(T.date("2026-03-01"))) (à \(Fmt.km(90_000)))."
+        XCTAssertEqual(plans.map(\.body), [expected, expected])
+    }
 }

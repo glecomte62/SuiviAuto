@@ -21,10 +21,16 @@ enum NotificationPlanner {
                 guard let day = calendar.date(byAdding: .day, value: -lead, to: calendar.startOfDay(for: due)),
                       let fire = calendar.date(bySettingHour: fireHour, minute: 0, second: 0, of: day),
                       fire > now else { return nil }
-                let when = due.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "fr_FR")))
+                let when = Fmt.date(due)
+                // Échéance au km : la date n'est qu'une estimation (les règles km+mois ont une vraie date calendaire).
+                let body = if item.source == .deadline, let km = item.dueKm {
+                    "Échéance estimée le \(when) (à \(Fmt.km(km)))."
+                } else {
+                    "Échéance dans \(lead) jours, le \(when)."
+                }
                 return PlannedNotification(id: "\(item.id)-J\(lead)",
                                            title: "\(item.carName) : \(item.label)",
-                                           body: "Échéance dans \(lead) jours, le \(when).",
+                                           body: body,
                                            fireDate: fire)
             }
         }

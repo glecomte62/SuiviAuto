@@ -33,7 +33,7 @@ enum DeletionService {
         }
     }
 
-    /// Suppression d'un objet sans fichier associé (relevé, règle, échéance).
+    /// Suppression d'un objet sans fichier associé (relevé, règle).
     /// Nom distinct des surcharges ci-dessus pour ne jamais court-circuiter la suppression des fichiers.
     static func deleteRecord(_ model: some PersistentModel, in context: ModelContext) throws {
         context.delete(model)

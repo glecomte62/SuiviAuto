@@ -36,7 +36,8 @@ final class Deadline {
 enum DeadlineCompletion: Equatable { case advanced, remove }
 
 extension Deadline {
-    /// Applique la validation de l'échéance. `.remove` : l'appelant supprime l'échéance.
+    /// Applique la validation de l'échéance. `.remove` : l'appelant supprime l'échéance
+    /// (date non annuelle, ou km sans intervalle).
     func complete(on date: Date, mileage: Int?, calendar: Calendar = .current) -> DeadlineCompletion {
         switch mode {
         case .date:
@@ -45,8 +46,9 @@ extension Deadline {
             return .advanced
         case .km:
             guard let interval = intervalKm, interval > 0 else { return .remove }
+            // Sans kilométrage relevé ni cible connue, rien de sensé à calculer : la cible reste inconnue.
             if let mileage { targetMileage = mileage + interval }
-            else { targetMileage = (targetMileage ?? 0) + interval }
+            else if let target = targetMileage { targetMileage = target + interval }
             return .advanced
         }
     }

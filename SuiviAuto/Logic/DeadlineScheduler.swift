@@ -21,7 +21,9 @@ enum DeadlineScheduler {
             let remaining = estimator.estimatedCurrentMileage.map { target - $0 }
             let estimatedDate = estimator.estimatedDate(forMileage: target)
             let status = DueStatusEvaluator.status(dueDate: estimatedDate, remainingKm: remaining, now: now, calendar: calendar)
-            return DeadlineDue(dueDate: estimatedDate, dueKm: target, remainingKm: remaining, status: status)
+            // Cible déjà dépassée : la « date estimée » serait celle du dernier relevé, sans signification.
+            let shownDate = (remaining ?? 0) < 0 ? nil : estimatedDate
+            return DeadlineDue(dueDate: shownDate, dueKm: target, remainingKm: remaining, status: status)
         }
     }
 }
