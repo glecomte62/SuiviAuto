@@ -8,6 +8,7 @@ final class StoredDocument {
     var addedAt: Date = Date.now
     var kindRaw: String = "pdf"
     var intervention: Intervention?
+    var deadline: Deadline?
 
     init(fileName: String, originalName: String, kind: DocumentKind, addedAt: Date = .now) {
         self.fileName = fileName

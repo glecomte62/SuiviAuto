@@ -47,7 +47,6 @@ final class UpgradeBackupTests: XCTestCase {
     }
 
     func testFolderNameUsesAppVersion() throws {
-        XCTExpectFailure("passe après la Task 2")
         let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmp) }

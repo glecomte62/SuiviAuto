@@ -18,6 +18,8 @@ final class Intervention {
     var ctResultRaw: String?
     var ruleKey: String?
     var car: Car?
+    var operationsRaw: String = ""
+    var customOperation: String = ""
 
     @Relationship(deleteRule: .cascade, inverse: \StoredDocument.intervention) var documents: [StoredDocument] = []
 
@@ -43,6 +45,18 @@ final class Intervention {
     var ctResult: CTResult? {
         get { ctResultRaw.flatMap(CTResult.init(rawValue:)) }
         set { ctResultRaw = newValue?.rawValue }
+    }
+
+    var operations: [MaintenanceOperation] {
+        get { MaintenanceOperation.decode(operationsRaw) }
+        set { operationsRaw = MaintenanceOperation.encode(newValue) }
+    }
+
+    /// « Vidange, Filtres, <saisie libre> » ; vide si aucune opération.
+    var operationsSummary: String {
+        let custom = customOperation.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (operations.filter { $0 != .autre }.map(\.label) + (custom.isEmpty ? [] : [custom]))
+            .joined(separator: ", ")
     }
 
     var displayTitle: String { title.isEmpty ? kind.label : title }

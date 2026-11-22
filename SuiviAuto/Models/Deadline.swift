@@ -9,6 +9,15 @@ final class Deadline {
     var repeatsYearly: Bool = false
     var notes: String = ""
     var car: Car?
+    var modeRaw: String = "date"
+    var targetMileage: Int?
+    var intervalKm: Int?
+    @Relationship(deleteRule: .cascade, inverse: \StoredDocument.deadline) var documents: [StoredDocument] = []
+
+    var mode: DeadlineMode {
+        get { DeadlineMode(rawValue: modeRaw) ?? .date }
+        set { modeRaw = newValue.rawValue }
+    }
 
     init(label: String, dueDate: Date, repeatsYearly: Bool, notes: String = "") {
         self.label = label

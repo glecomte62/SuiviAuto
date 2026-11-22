@@ -40,6 +40,12 @@ enum InterventionKind: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum DeadlineMode: String, CaseIterable, Identifiable, Codable {
+    case date, km
+    var id: String { rawValue }
+    var label: String { self == .date ? "À une date" : "À un kilométrage" }
+}
+
 enum InterventionStatus: String, CaseIterable, Identifiable, Codable {
     case devis, facture
     var id: String { rawValue }
