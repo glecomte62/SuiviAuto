@@ -15,6 +15,9 @@ struct CarFormView: View {
     @State private var plate = ""
     @State private var vin = ""
     @State private var firstRegistrationDate = Date.now
+    @State private var usedPurchase = false
+    @State private var purchaseDate = Date.now
+    @State private var purchaseMileage: Int?
     @State private var fuel: FuelType = .essence
     @State private var colorHex = CarPalette.colors[0]
     @State private var photo: Data?
@@ -58,6 +61,11 @@ struct CarFormView: View {
                     TextField("Immatriculation", text: $plate, prompt: Text("AB-123-CD"))
                     TextField("N° VIN", text: $vin)
                     DatePicker("1re immatriculation", selection: $firstRegistrationDate, displayedComponents: .date)
+                    Toggle("Achetée d'occasion", isOn: $usedPurchase)
+                    if usedPurchase {
+                        DatePicker("Date d'achat", selection: $purchaseDate, displayedComponents: .date)
+                        TextField("Km à l'achat", value: $purchaseMileage, format: .number)
+                    }
                     Picker("Carburant", selection: $fuel) {
                         ForEach(FuelType.allCases) { Text($0.label).tag($0) }
                     }
@@ -115,9 +123,16 @@ struct CarFormView: View {
         }
         name = car.name; brand = car.brand; modelName = car.modelName; plate = car.plate; vin = car.vin
         firstRegistrationDate = car.firstRegistrationDate; fuel = car.fuel; colorHex = car.colorHex; photo = car.photo
+        usedPurchase = car.isUsedPurchase
+        purchaseDate = car.purchaseDate ?? Date.now
+        purchaseMileage = car.purchaseMileage
     }
 
     private func save() {
+        if usedPurchase && purchaseDate < firstRegistrationDate {
+            errorMessage = "La date d'achat doit être postérieure à la 1re immatriculation."
+            return
+        }
         let target: Car
         if let car {
             target = car
@@ -129,6 +144,8 @@ struct CarFormView: View {
         target.name = name.trimmingCharacters(in: .whitespaces)
         target.brand = brand; target.modelName = modelName; target.plate = plate.uppercased(); target.vin = vin.uppercased()
         target.firstRegistrationDate = firstRegistrationDate; target.fuel = fuel; target.colorHex = colorHex; target.photo = photo
+        target.purchaseDate = usedPurchase ? purchaseDate : nil
+        target.purchaseMileage = usedPurchase ? purchaseMileage : nil
         do {
             try context.save()
             if car == nil { onCreated?(target) }

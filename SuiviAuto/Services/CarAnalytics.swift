@@ -8,7 +8,17 @@ enum CarAnalytics {
         let invoices = car.interventions
             .filter { $0.status == .facture && $0 != excluding }
             .map { MileagePoint(date: $0.date, km: $0.mileage) }
-        return readings + invoices
+        var points = readings + invoices
+        if let date = car.purchaseDate, let km = car.purchaseMileage {
+            points.append(MileagePoint(date: date, km: km))
+        }
+        return points
+    }
+
+    /// Départ d'une règle jamais effectuée : achat (voiture d'occasion), sinon 1re immatriculation à 0 km.
+    static func defaultRuleStart(for car: Car) -> MileagePoint {
+        if let date = car.purchaseDate { return MileagePoint(date: date, km: car.purchaseMileage ?? 0) }
+        return MileagePoint(date: car.firstRegistrationDate, km: 0)
     }
 
     static func estimator(for car: Car, now: Date = .now, calendar: Calendar = .current) -> MileageEstimator {

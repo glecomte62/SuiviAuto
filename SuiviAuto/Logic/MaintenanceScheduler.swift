@@ -14,10 +14,10 @@ struct MaintenanceDue: Equatable {
 }
 
 enum MaintenanceScheduler {
-    /// `lastDone` : dernière facture liée à la règle. Si nil : 1re immatriculation et 0 km.
-    static func due(rule: RuleSpec, lastDone: MileagePoint?, firstRegistration: Date,
+    /// `lastDone` : dernière facture liée à la règle. Si nil : `defaultStart` (achat, sinon 1re immatriculation à 0 km).
+    static func due(rule: RuleSpec, lastDone: MileagePoint?, defaultStart: MileagePoint,
                     estimator: MileageEstimator, now: Date, calendar: Calendar = .current) -> MaintenanceDue {
-        let start = lastDone ?? MileagePoint(date: firstRegistration, km: 0)
+        let start = lastDone ?? defaultStart
         let dueKm = rule.intervalKm.map { start.km + $0 }
         let dateByTime = rule.intervalMonths.flatMap { calendar.date(byAdding: .month, value: $0, to: start.date) }
         let dateByKm = dueKm.flatMap { estimator.estimatedDate(forMileage: $0) }

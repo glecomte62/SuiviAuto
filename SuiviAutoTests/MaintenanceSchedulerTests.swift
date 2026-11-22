@@ -6,11 +6,11 @@ final class MaintenanceSchedulerTests: XCTestCase {
         MileageEstimator(points: pts.map { MileagePoint(date: T.date($0.0), km: $0.1) }, now: T.date(now), calendar: T.calendar)
     }
 
-    func due(_ rule: RuleSpec, last: (String, Int)?, firstReg: String = "2020-01-01",
+    func due(_ rule: RuleSpec, last: (String, Int)?, firstReg: String = "2020-01-01", start: (String, Int)? = nil,
              pts: [(String, Int)] = [], now: String) -> MaintenanceDue {
         MaintenanceScheduler.due(rule: rule,
                                  lastDone: last.map { MileagePoint(date: T.date($0.0), km: $0.1) },
-                                 firstRegistration: T.date(firstReg),
+                                 defaultStart: MileagePoint(date: T.date(start?.0 ?? firstReg), km: start?.1 ?? 0),
                                  estimator: estimator(pts, now: now),
                                  now: T.date(now), calendar: T.calendar)
     }
@@ -59,5 +59,12 @@ final class MaintenanceSchedulerTests: XCTestCase {
         let d = due(RuleSpec(label: "Liquide", intervalKm: nil, intervalMonths: 24), last: nil, firstReg: "2024-06-01", now: "2026-07-01")
         XCTAssertEqual(d.dueDate, T.date("2026-06-01"))
         XCTAssertEqual(d.status, .overdue)
+    }
+
+    func testNeverDoneRuleStartsFromDefaultStart() {
+        let d = due(RuleSpec(label: "Vidange", intervalKm: 15_000, intervalMonths: 12),
+                    last: nil, start: ("2025-06-01", 80_000), now: "2026-01-10")
+        XCTAssertEqual(d.dueKm, 95_000)
+        XCTAssertEqual(d.dueDate, T.date("2026-06-01"))
     }
 }

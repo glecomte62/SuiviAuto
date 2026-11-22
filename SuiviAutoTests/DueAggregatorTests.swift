@@ -122,4 +122,31 @@ final class DueAggregatorTests: XCTestCase {
         XCTAssertEqual(list.sorted(by: DueItem.byDate).map(\.id), expected)
         XCTAssertEqual(list.reversed().sorted(by: DueItem.byDate).map(\.id), expected)
     }
+
+    func testUsedCarStartsFromPurchase() throws {
+        car.firstRegistrationDate = T.date("2018-01-01")
+        car.purchaseDate = T.date("2025-06-01")
+        car.purchaseMileage = 80_000
+        try ctx.save()
+
+        let list = items()
+        let frein = list.first { $0.label == "Liquide de frein" }!
+        XCTAssertEqual(frein.dueDate, T.date("2027-06-01"))
+        XCTAssertNotEqual(frein.status, .overdue)
+        XCTAssertEqual(list.first { $0.label == "Vidange moteur" }!.dueKm, 95_000)
+
+        let ct = list.first { $0.source == .technicalInspection }!
+        XCTAssertEqual(ct.dueDate, T.date("2022-01-01"))
+        XCTAssertEqual(ct.status, .overdue)
+    }
+
+    func testPurchasePointIsAMileagePoint() throws {
+        car.purchaseDate = T.date("2025-06-01")
+        car.purchaseMileage = 80_000
+        XCTAssertTrue(car.isUsedPurchase)
+        XCTAssertTrue(CarAnalytics.mileagePoints(for: car).contains(MileagePoint(date: T.date("2025-06-01"), km: 80_000)))
+        XCTAssertEqual(CarAnalytics.lastKnownMileage(for: car, onOrBefore: T.date("2025-06-01")), 80_000)
+        XCTAssertEqual(CarAnalytics.lastKnownMileage(for: car, onOrBefore: T.date("2026-01-01")), 80_000)
+        XCTAssertNil(CarAnalytics.lastKnownMileage(for: car, onOrBefore: T.date("2025-05-31")))
+    }
 }

@@ -52,7 +52,7 @@ enum DueAggregator {
         return MaintenanceScheduler.due(
             rule: RuleSpec(label: rule.label, intervalKm: rule.intervalKm, intervalMonths: rule.intervalMonths),
             lastDone: last.map { MileagePoint(date: $0.date, km: $0.mileage) },
-            firstRegistration: car.firstRegistrationDate,
+            defaultStart: CarAnalytics.defaultRuleStart(for: car),
             estimator: estimator, now: now, calendar: calendar)
     }
 

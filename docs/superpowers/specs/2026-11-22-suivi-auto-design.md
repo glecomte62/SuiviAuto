@@ -31,6 +31,7 @@ Usage mono-utilisateur, données 100 % locales, aucun serveur.
 | plate | String (immatriculation) | non |
 | vin | String | non |
 | firstRegistrationDate | Date (1re immatriculation) | oui (sert au calcul du CT) |
+| purchaseDate, purchaseMileage | Date?, Int? (achat d'occasion : date et km à l'achat) | non |
 | fuel | enum : essence, diesel, hybride, électrique, GPL, autre | non |
 | colorTag | String (couleur d'accent, hex) | oui, valeur par défaut attribuée |
 | photo | Data (image redimensionnée, max 1024 px) | non |
@@ -77,7 +78,7 @@ Formats acceptés : PDF, JPEG, PNG, HEIC.
 | intervalMonths | Int optionnel |
 
 Au moins un des deux intervalles est renseigné. Le point de départ est la dernière **facture**
-avec le même `ruleKey`. S'il n'y en a pas, on part de la date de 1re immatriculation et de 0 km.
+avec le même `ruleKey`. S'il n'y en a pas : depuis l'achat (date et km d'achat) pour une voiture d'occasion, sinon depuis la 1re immatriculation à 0 km.
 
 Règles proposées par défaut à la création d'une voiture (modifiables ou supprimables) :
 vidange 15 000 km / 12 mois, courroie de distribution 120 000 km / 72 mois, liquide de frein 24 mois.
@@ -99,7 +100,7 @@ Calcule la prochaine échéance du contrôle technique à partir de `firstRegist
 - Contre-visite défavorable dans les 2 mois : l'échéance reste 2 mois après le CT initial.
 
 ### MileageEstimator
-- Prend en entrée tous les points (date, km) : relevés et interventions facturées.
+- Prend en entrée tous les points (date, km) : relevés, interventions facturées et, pour une voiture d'occasion, la date et le km d'achat.
 - Avec 0 point, pas d'estimation. Avec 1 point, km estimé = ce km et aucune moyenne.
 - Avec 2 points ou plus : moyenne en km/jour calculée sur les 12 derniers mois s'il y a au moins 2 points sur cette période, sinon sur tout l'historique.
 - `estimatedMileage(at: Date)` = dernier km + moyenne × jours écoulés.

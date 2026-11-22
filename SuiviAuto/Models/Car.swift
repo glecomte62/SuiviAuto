@@ -10,6 +10,8 @@ final class Car {
     var plate: String = ""
     var vin: String = ""
     var firstRegistrationDate: Date = Date.now
+    var purchaseDate: Date?
+    var purchaseMileage: Int?
     var fuelRaw: String = "essence"
     var colorHex: String = "#2E86AB"
     @Attribute(.externalStorage) var photo: Data?
@@ -25,6 +27,8 @@ final class Car {
         self.firstRegistrationDate = firstRegistrationDate
         self.colorHex = colorHex
     }
+
+    var isUsedPurchase: Bool { purchaseDate != nil }
 
     var fuel: FuelType {
         get { FuelType(rawValue: fuelRaw) ?? .autre }
