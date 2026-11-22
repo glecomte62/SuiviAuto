@@ -1,0 +1,53 @@
+SuiviAuto — suivi d'entretien de vos voitures
+==============================================
+
+Configuration requise : un Mac sous macOS 27 ou plus récent.
+
+
+1. INSTALLATION
+---------------
+Faites glisser l'icône « SuiviAuto » sur le dossier « Applications »
+juste à côté, puis éjectez ce disque.
+
+
+2. PREMIÈRE OUVERTURE (une seule fois)
+--------------------------------------
+SuiviAuto est une application gratuite, partagée entre amis : elle n'est
+pas enregistrée auprès d'Apple. Au premier lancement, macOS affiche donc
+un message du type « Apple n'a pas pu vérifier… » et refuse de l'ouvrir.
+C'est normal. Pour l'autoriser :
+
+  a. Cliquez sur « OK » (ou « Terminé ») dans le message.
+  b. Ouvrez  Réglages Système  >  Confidentialité et sécurité.
+  c. Descendez jusqu'à la section « Sécurité » : une ligne indique que
+     « SuiviAuto » a été bloquée. Cliquez sur « Ouvrir quand même ».
+  d. Confirmez avec votre mot de passe ou Touch ID.
+
+Les fois suivantes, SuiviAuto s'ouvre normalement.
+
+(Pour les habitués du Terminal, la commande suivante fait la même chose :
+   xattr -dr com.apple.quarantine /Applications/SuiviAuto.app )
+
+Acceptez ensuite les notifications : elles servent aux rappels
+(contrôle technique, vidange, assurance…) 30 jours et 7 jours avant.
+
+
+3. VOS DONNÉES
+--------------
+Tout reste sur votre Mac, rien n'est envoyé sur Internet.
+  - Base et factures : ~/Library/Application Support/SuiviAuto/
+    (sauvegardées par Time Machine)
+  - Sauvegarde manuelle : menu Fichier > Exporter une sauvegarde…
+  - Export Excel : menu Fichier > Exporter l'historique en CSV…
+
+
+4. PRISE EN MAIN
+----------------
+  ⇧⌘N  nouvelle voiture        ⌘N  nouvelle intervention
+  ⌘K   relevé kilométrique     Espace  aperçu d'une facture
+
+Astuce : pour une voiture qui n'est pas neuve, saisissez son dernier
+contrôle technique et ses dernières factures d'entretien (en choisissant
+la « Règle d'entretien » correspondante) : les échéances se recalculent.
+Si vous l'avez achetée d'occasion, cochez « Achetée d'occasion » et
+indiquez la date et le kilométrage d'achat.

@@ -3,3 +3,4 @@ build/
 DerivedData/
 SuiviAuto.xcodeproj/
 *.xcodeproj/xcuserdata/
+dist/

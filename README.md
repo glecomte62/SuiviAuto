@@ -8,6 +8,8 @@ Suivi d'entretien de voitures pour macOS : interventions, factures et devis, con
 scripts/test.sh      # tests unitaires
 scripts/build.sh     # compilation Debug
 scripts/install.sh   # compilation Release + copie dans /Applications
+scripts/make-dmg.sh  # installeur à partager : dist/SuiviAuto-<version>.dmg
+swift scripts/make-icon.swift sortie.png  # régénère l'icône
 ```
 
 Prérequis : Xcode 27+, `brew install xcodegen`.
