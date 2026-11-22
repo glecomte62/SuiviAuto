@@ -64,7 +64,7 @@ struct CarFormView: View {
                     Toggle("Achetée d'occasion", isOn: $usedPurchase)
                     if usedPurchase {
                         DatePicker("Date d'achat", selection: $purchaseDate, displayedComponents: .date)
-                        TextField("Km à l'achat", value: $purchaseMileage, format: .number)
+                        TextField("Km à l'achat", value: $purchaseMileage, format: .number, prompt: Text("obligatoire"))
                     }
                     Picker("Carburant", selection: $fuel) {
                         ForEach(FuelType.allCases) { Text($0.label).tag($0) }
@@ -77,7 +77,8 @@ struct CarFormView: View {
                 Button("Annuler", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Enregistrer") { save() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty
+                              || !PurchaseValidation.isComplete(usedPurchase: usedPurchase, mileage: purchaseMileage))
             }
             .padding()
         }
@@ -129,7 +130,7 @@ struct CarFormView: View {
     }
 
     private func save() {
-        if usedPurchase && purchaseDate < firstRegistrationDate {
+        if usedPurchase && !PurchaseValidation.isDateValid(purchase: purchaseDate, firstRegistration: firstRegistrationDate) {
             errorMessage = "La date d'achat doit être postérieure à la 1re immatriculation."
             return
         }
