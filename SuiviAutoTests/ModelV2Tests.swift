@@ -99,12 +99,39 @@ final class ModelV2Tests: XCTestCase {
             let container = try ModelContainer(for: Schema(SchemaModels.all), configurations: ModelConfiguration(url: store))
             let ctx = ModelContext(container)
             XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<Car>()), 1, name)
-            for d in try ctx.fetch(FetchDescriptor<Deadline>()) {
+            let interventions = try ctx.fetch(FetchDescriptor<Intervention>())
+            let deadlines = try ctx.fetch(FetchDescriptor<Deadline>())
+            for d in deadlines {
                 XCTAssertEqual(d.mode, .date, name)
                 XCTAssertNil(d.targetMileage, name)
+                XCTAssertNil(d.intervalKm, name)
+                XCTAssertEqual(d.documents, [], name)
             }
-            for i in try ctx.fetch(FetchDescriptor<Intervention>()) {
+            for i in interventions {
                 XCTAssertEqual(i.operations, [], name)
+                XCTAssertEqual(i.customOperation, "", name)
+            }
+
+            switch name {
+            case "v1_1":
+                XCTAssertEqual(interventions.count, 3)
+                XCTAssertEqual(interventions.compactMap(\.amountCents).sorted(), [18_990, 30_000, 70_000])
+                XCTAssertEqual(deadlines.count, 2)
+                let garages = try ctx.fetch(FetchDescriptor<Garage>())
+                XCTAssertEqual(garages.count, 1)
+                let linked = interventions.filter { $0.garageRef != nil }
+                XCTAssertEqual(linked.count, 1)
+                XCTAssertEqual(linked.first?.date, T.date("2024-01-10"))
+                XCTAssertTrue(linked.first?.garageRef === garages.first)
+                XCTAssertEqual(garages.first?.contacts.map(\.name), ["Paul"])
+                XCTAssertEqual(try ctx.fetch(FetchDescriptor<OdometerReading>()).map(\.mileage), [52_000])
+                XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<MaintenanceRule>()), 3)
+            default:
+                XCTAssertEqual(interventions.count, 5)
+                XCTAssertEqual(Set(interventions.map(\.garage)),
+                               ["", "Garage du Nord", "Garage du Nörd", "garage  du NORD ", "Speedy Lille"])
+                XCTAssertEqual(interventions.compactMap(\.amountCents).reduce(0, +), 123_990)
+                XCTAssertEqual(deadlines.count, 0)
             }
         }
     }

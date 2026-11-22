@@ -82,6 +82,26 @@ final class BackupServiceTests: XCTestCase {
         XCTAssertEqual(count, 5)
     }
 
+    /// Une sauvegarde .zip faite en 1.1 (garages, contacts) doit se restaurer en 2.0.
+    func testStageRestoreAcceptsVersion11Backup() throws {
+        let oldBase = root.appendingPathComponent("v1_1").appendingPathComponent("SuiviAuto")
+        try T.copyFixture("v1_1", to: oldBase)
+        let zip = root.appendingPathComponent("sauvegarde-1.1.zip")
+        try BackupService.exportBackup(to: zip, base: oldBase)
+
+        try BackupService.stageRestore(from: zip, pending: pending)
+        let staged = pending.appendingPathComponent("SuiviAuto.store")
+        let counts = try autoreleasepool {
+            let container = try ModelContainer(for: Schema(SchemaModels.all), configurations: ModelConfiguration(url: staged))
+            let ctx = ModelContext(container)
+            return [try ctx.fetchCount(FetchDescriptor<Intervention>()),
+                    try ctx.fetchCount(FetchDescriptor<Garage>()),
+                    try ctx.fetchCount(FetchDescriptor<GarageContact>()),
+                    try ctx.fetchCount(FetchDescriptor<Deadline>())]
+        }
+        XCTAssertEqual(counts, [3, 1, 1, 2])
+    }
+
     func testStageRejectsUnreadableStore() throws {
         // base de setUp : « SuiviAuto.store » est un fichier texte, pas une base SQLite
         let zip = root.appendingPathComponent("corrompue.zip")
