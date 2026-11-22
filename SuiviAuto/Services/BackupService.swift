@@ -62,7 +62,7 @@ enum BackupService {
     }
 
     /// Copie cohérente d'un store SQLite ouvert (WAL inclus) ; copie simple sinon (fichier non SQLite, tests).
-    private static func copyStore(from source: URL, to destination: URL) throws {
+    static func copyStore(from source: URL, to destination: URL) throws {
         let fm = FileManager.default
         guard fm.fileExists(atPath: source.path) else { return }
         if isSQLite(source) {
@@ -78,7 +78,7 @@ enum BackupService {
         }
     }
 
-    private static func isSQLite(_ url: URL) -> Bool {
+    static func isSQLite(_ url: URL) -> Bool {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
         defer { try? handle.close() }
         let header = (try? handle.read(upToCount: 16)) ?? Data()
@@ -114,13 +114,19 @@ enum BackupService {
         }
     }
 
-    /// Copie de sécurité « SuiviAuto-avant-restauration-* » la plus récente dans `directory`, s'il y en a une.
+    /// Préfixes des copies de sécurité automatiques (avant restauration, avant la mise à jour 1.1).
+    static let safetyCopyPrefixes = ["SuiviAuto-avant-restauration-", UpgradeBackup.folderPrefix]
+
+    /// Copie de sécurité la plus récente dans `directory` (tous types confondus, d'après la date du nom).
     static func latestSafetyCopy(in directory: URL = AppPaths.baseURL.deletingLastPathComponent()) -> URL? {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
-        return names
-            .filter { $0.hasPrefix("SuiviAuto-avant-restauration-") }
-            .max { $0.localizedStandardCompare($1) == .orderedAscending }
-            .map { directory.appendingPathComponent($0) }
+        let dated: [(stamp: String, name: String)] = names.compactMap { name in
+            guard let prefix = safetyCopyPrefixes.first(where: { name.hasPrefix($0) }) else { return nil }
+            return (String(name.dropFirst(prefix.count)), name)
+        }
+        return dated
+            .max { $0.stamp.localizedStandardCompare($1.stamp) == .orderedAscending }
+            .map { directory.appendingPathComponent($0.name) }
     }
 
     static func timestamp(_ date: Date) -> String {
@@ -131,7 +137,7 @@ enum BackupService {
     }
 
     /// Premier chemin libre « <prefix> », « <prefix>-2 », … dans `directory`.
-    private static func freeURL(in directory: URL, prefix: String) -> URL {
+    static func freeURL(in directory: URL, prefix: String) -> URL {
         var url = directory.appendingPathComponent(prefix)
         var n = 2
         while FileManager.default.fileExists(atPath: url.path) {

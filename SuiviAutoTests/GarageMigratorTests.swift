@@ -66,25 +66,27 @@ final class GarageMigratorTests: XCTestCase {
 
     func testOpensVersion10StoreAndConverts() throws {
         let fm = FileManager.default
-        let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/v1_0", isDirectory: true)
         let tmp = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try fm.createDirectory(at: tmp, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: tmp) }
-        for name in try fm.contentsOfDirectory(atPath: fixture.path) {
-            try fm.copyItem(at: fixture.appendingPathComponent(name), to: tmp.appendingPathComponent(name))
-        }
+        let storeURL = try T.copyV10Fixture(to: tmp)
 
         let container = try ModelContainer(for: Schema(SchemaModels.all),
-                                           configurations: ModelConfiguration(url: tmp.appendingPathComponent("SuiviAuto.store")))
+                                           configurations: ModelConfiguration(url: storeURL))
         let store = ModelContext(container)
-        XCTAssertEqual(try store.fetchCount(FetchDescriptor<Intervention>()), 5)
+        let interventions = try store.fetch(FetchDescriptor<Intervention>(sortBy: [SortDescriptor(\.title)]))
+        XCTAssertEqual(interventions.count, 5)
+        XCTAssertEqual(try store.fetchCount(FetchDescriptor<Car>()), 1)
+        XCTAssertTrue(interventions.allSatisfy { $0.car != nil })
+        XCTAssertEqual(interventions.compactMap(\.amountCents).reduce(0, +), 123_990)
+        XCTAssertEqual(interventions.map(\.title), (1...5).map { "Intervention \($0)" })
 
         XCTAssertEqual(try GarageMigrator.run(in: store), GarageMigrator.Result(created: 2, linked: 4))
         let names = try store.fetch(FetchDescriptor<Garage>(sortBy: [SortDescriptor(\.name)])).map(\.name)
         XCTAssertEqual(names, ["Garage du Nord", "Speedy Lille"])
         let nord = try store.fetch(FetchDescriptor<Garage>()).first { $0.name == "Garage du Nord" }!
         XCTAssertEqual(nord.interventions.count, 3)
+        XCTAssertEqual(interventions.first { $0.title == "Intervention 2" }?.garage, "garage  du NORD ")
+        XCTAssertEqual(interventions.compactMap(\.amountCents).reduce(0, +), 123_990)
         XCTAssertEqual(try GarageMigrator.run(in: store), GarageMigrator.Result(created: 0, linked: 0))
     }
 }

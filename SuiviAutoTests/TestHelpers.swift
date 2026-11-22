@@ -26,3 +26,29 @@ extension T {
         return ModelContext(container)
     }
 }
+
+extension T {
+    /// Copie la base 1.0 de référence (fichiers `SuiviAuto.store*` uniquement) dans `directory`.
+    /// Échoue si le fichier versionné est absent ou n'est pas une vraie base SQLite (ex. emplacement iCloud non téléchargé).
+    @discardableResult
+    static func copyV10Fixture(to directory: URL) throws -> URL {
+        let fm = FileManager.default
+        let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/v1_0", isDirectory: true)
+        let store = fixture.appendingPathComponent("SuiviAuto.store")
+        guard fm.fileExists(atPath: store.path) else { throw FixtureError.missing(store.path) }
+        let header = try FileHandle(forReadingFrom: store).read(upToCount: 16) ?? Data()
+        guard header == Data("SQLite format 3\u{0}".utf8) else { throw FixtureError.notSQLite(store.path) }
+
+        try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        for name in try fm.contentsOfDirectory(atPath: fixture.path) where name.hasPrefix("SuiviAuto.store") {
+            try fm.copyItem(at: fixture.appendingPathComponent(name), to: directory.appendingPathComponent(name))
+        }
+        return directory.appendingPathComponent("SuiviAuto.store")
+    }
+
+    enum FixtureError: Error {
+        case missing(String)
+        case notSQLite(String)
+    }
+}

@@ -22,6 +22,17 @@ struct SuiviAutoApp: App {
                     + (moved.map { " La sauvegarde décompressée a été mise de côté dans « \($0.lastPathComponent) »." } ?? "")
             }
         }
+        if !Self.isRunningTests {
+            // Avant que SwiftData ne migre une base d'une version précédente : copie de sécurité.
+            // Un échec ne bloque pas le lancement.
+            do {
+                try UpgradeBackup.backupIfNeedsMigration()
+            } catch {
+                let message = "La copie de sécurité de vos données avant la mise à jour n'a pas pu être faite : "
+                    + "\(error.localizedDescription). Vos données ont été ouvertes normalement."
+                launchMessage = [launchMessage, message].compactMap { $0 }.joined(separator: "\n\n")
+            }
+        }
         do {
             if Self.isRunningTests {
                 container = try ModelContainer(for: Schema(SchemaModels.all),
@@ -38,7 +49,7 @@ struct SuiviAutoApp: App {
             do {
                 try GarageMigrator.run(in: container.mainContext)
             } catch {
-                let message = "La conversion des garages a échoué : \(error.localizedDescription). Les noms restent affichés tels quels."
+                let message = "La conversion des garages a échoué : \(error.localizedDescription). Les noms restent affichés tels quels ; la conversion sera réessayée au prochain lancement."
                 launchMessage = [launchMessage, message].compactMap { $0 }.joined(separator: "\n\n")
             }
         }

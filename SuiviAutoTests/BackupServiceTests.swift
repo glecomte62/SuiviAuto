@@ -65,6 +65,23 @@ final class BackupServiceTests: XCTestCase {
         XCTAssertEqual(try carNames(in: previous), ["Mégane"])
     }
 
+    /// Une sauvegarde .zip faite en 1.0 doit se restaurer en 1.1.
+    func testStageRestoreAcceptsVersion10Backup() throws {
+        let oldRoot = root.appendingPathComponent("v1_0")
+        let oldBase = oldRoot.appendingPathComponent("SuiviAuto")
+        try T.copyV10Fixture(to: oldBase)
+        let zip = root.appendingPathComponent("sauvegarde-1.0.zip")
+        try BackupService.exportBackup(to: zip, base: oldBase)
+
+        try BackupService.stageRestore(from: zip, pending: pending)
+        let staged = pending.appendingPathComponent("SuiviAuto.store")
+        let count = try autoreleasepool {
+            let container = try ModelContainer(for: Schema(SchemaModels.all), configurations: ModelConfiguration(url: staged))
+            return try ModelContext(container).fetchCount(FetchDescriptor<Intervention>())
+        }
+        XCTAssertEqual(count, 5)
+    }
+
     func testStageRejectsUnreadableStore() throws {
         // base de setUp : « SuiviAuto.store » est un fichier texte, pas une base SQLite
         let zip = root.appendingPathComponent("corrompue.zip")
