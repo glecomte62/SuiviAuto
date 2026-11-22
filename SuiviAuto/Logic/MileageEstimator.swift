@@ -20,12 +20,14 @@ struct MileageEstimator {
 
     var latest: MileagePoint? { points.last }
 
-    /// Moyenne km/jour : sur les 12 derniers mois s'il y a au moins 2 points, sinon sur tout l'historique.
+    /// Moyenne km/jour : sur les 12 derniers mois s'il y a au moins 2 points couvrant plus d'un instant,
+    /// sinon sur tout l'historique.
     var kmPerDay: Double? {
         guard points.count >= 2 else { return nil }
         let windowStart = calendar.date(byAdding: .month, value: -12, to: now)!
         let recent = points.filter { $0.date >= windowStart }
-        let sample = recent.count >= 2 ? recent : points
+        let recentUsable = recent.count >= 2 && recent.last!.date > recent.first!.date
+        let sample = recentUsable ? recent : points
         guard let first = sample.first, let last = sample.last else { return nil }
         let days = last.date.timeIntervalSince(first.date) / Self.secondsPerDay
         guard days > 0 else { return nil }
@@ -46,6 +48,7 @@ struct MileageEstimator {
         guard let latest else { return nil }
         if target <= latest.km { return latest.date }
         guard let rate = kmPerDay, rate > 0 else { return nil }
-        return latest.date.addingTimeInterval(Double(target - latest.km) / rate * Self.secondsPerDay)
+        let days = Int((Double(target - latest.km) / rate).rounded(.up))
+        return calendar.date(byAdding: .day, value: days, to: latest.date)
     }
 }

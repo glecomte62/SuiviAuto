@@ -17,12 +17,19 @@ struct DueItem: Identifiable, Equatable {
     let status: DueStatus
     let source: Source
 
-    /// Tri : date croissante, sans date en dernier.
+    /// Tri : date croissante, sans date en dernier. À date égale : statut le plus grave d'abord,
+    /// puis nom de voiture, libellé, identifiant. Sans date : par identifiant.
     static func byDate(_ a: DueItem, _ b: DueItem) -> Bool {
         switch (a.dueDate, b.dueDate) {
-        case let (x?, y?): return x < y
+        case let (x?, y?):
+            if x != y { return x < y }
+            if a.status != b.status { return a.status > b.status }
+            if a.carName != b.carName { return a.carName < b.carName }
+            if a.label != b.label { return a.label < b.label }
+            return a.id < b.id
         case (_?, nil): return true
-        default: return false
+        case (nil, _?): return false
+        case (nil, nil): return a.id < b.id
         }
     }
 }

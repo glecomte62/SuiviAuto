@@ -52,4 +52,20 @@ final class MileageEstimatorTests: XCTestCase {
         XCTAssertEqual(e.latest, MileagePoint(date: T.date("2026-01-11"), km: 11_000))
         XCTAssertEqual(e.kmPerDay!, 100, accuracy: 0.0001)
     }
+
+    func testSameDayRecentReadingsFallBackToFullHistory() {
+        // deux relevés le même jour dans les 12 derniers mois : fenêtre inexploitable -> tout l'historique
+        let e = make([("2024-01-01", 0), ("2026-06-01", 30_000), ("2026-06-01", 30_100)], now: "2026-07-01")
+        XCTAssertEqual(e.kmPerDay!, 30_100.0 / 882.0, accuracy: 0.0001)
+    }
+
+    func testEstimatedDateAcrossDSTIsLocalMidnight() {
+        var paris = Calendar(identifier: .gregorian)
+        paris.timeZone = TimeZone(identifier: "Europe/Paris")!
+        func d(_ day: Int, _ month: Int) -> Date { paris.date(from: DateComponents(year: 2026, month: month, day: day))! }
+        let e = MileageEstimator(points: [MileagePoint(date: d(15, 10), km: 10_000), MileagePoint(date: d(20, 10), km: 10_500)],
+                                 now: d(20, 10), calendar: paris)
+        // 100 km/jour : 1 000 km après le 20/10 -> 30/10, après le changement d'heure du 25/10
+        XCTAssertEqual(e.estimatedDate(forMileage: 11_500), d(30, 10))
+    }
 }

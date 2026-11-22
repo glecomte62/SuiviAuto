@@ -31,9 +31,10 @@ final class Car {
         set { fuelRaw = newValue.rawValue }
     }
 
-    /// Ajoute les règles d'entretien proposées par défaut (spec §3).
+    /// Ajoute les règles d'entretien proposées par défaut (spec §3). Les clés déjà présentes sont ignorées.
     func addDefaultRules(in context: ModelContext) {
-        for d in MaintenanceRule.defaults {
+        let existing = Set(rules.map(\.key))
+        for d in MaintenanceRule.defaults where !existing.contains(d.key) {
             let rule = MaintenanceRule(key: d.key, label: d.label, intervalKm: d.km, intervalMonths: d.months)
             context.insert(rule)
             rule.car = self

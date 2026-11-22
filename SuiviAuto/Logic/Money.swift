@@ -3,7 +3,7 @@ import Foundation
 /// Montants en centimes d'euro.
 enum Money {
     static let locale = Locale(identifier: "fr_FR")
-    private static let pattern = try! Regex("^[0-9]+([.][0-9]{1,2})?$")
+    private static let pattern = try! Regex("^[0-9]{1,9}([.][0-9]{1,2})?$")
 
     /// "1 234,56 €" -> 123456. Retourne nil si le texte n'est pas un montant positif valide.
     static func parse(_ text: String) -> Int? {
@@ -22,8 +22,9 @@ enum Money {
         (Decimal(cents) / 100).formatted(.currency(code: "EUR").locale(locale))
     }
 
-    /// 18990 -> "189,90", pour pré-remplir un champ de saisie.
+    /// 18990 -> "189,90", pour pré-remplir un champ de saisie. -5 -> "-0,05".
     static func editString(cents: Int) -> String {
-        String(format: "%d,%02d", cents / 100, cents % 100)
+        let magnitude = cents.magnitude
+        return String(format: "%@%llu,%02llu", cents < 0 ? "-" : "", magnitude / 100, magnitude % 100)
     }
 }

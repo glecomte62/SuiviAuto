@@ -63,6 +63,8 @@ final class DueAggregatorTests: XCTestCase {
 
         let ct = items().first { $0.source == .technicalInspection }!
         XCTAssertEqual(ct.dueDate, T.date("2028-01-05"))
+        let vidange = items().first { $0.source == .rule("vidange") }!
+        XCTAssertEqual(vidange.dueKm, 15_000)
         XCTAssertEqual(CarAnalytics.lastKnownMileage(for: car, onOrBefore: now), 50_000)
     }
 
@@ -98,6 +100,26 @@ final class DueAggregatorTests: XCTestCase {
         addIntervention("2026-01-06", km: 50_000, kind: .pneus)  // sans montant : ignorée
         try ctx.save()
         let entries = CarAnalytics.costEntries(for: [car])
-        XCTAssertEqual(entries, [CostEntry(carName: "Clio", date: T.date("2026-01-05"), kind: .pneus, amountCents: 40_000, status: .facture)])
+        XCTAssertEqual(entries, [CostEntry(carID: car.uuid.uuidString, carName: "Clio", date: T.date("2026-01-05"), kind: .pneus, amountCents: 40_000, status: .facture)])
+    }
+
+    func testSameDateItemsAreOrderedDeterministically() {
+        let d = T.date("2026-03-01")
+        func item(_ id: String, _ car: String, _ label: String, _ status: DueStatus, _ date: Date? = d) -> DueItem {
+            DueItem(id: id, carName: car, carColorHex: "#000000", label: label, detail: nil,
+                    dueDate: date, dueKm: nil, status: status, source: .deadline)
+        }
+        let list = [
+            item("z", "C3", "B", .ok, nil),
+            item("y", "C3", "A", .ok, nil),
+            item("5", "Clio", "B", .ok),
+            item("4", "Clio", "A", .ok),
+            item("3", "C3", "A", .soon),
+            item("2", "C3", "A", .ok, d),
+            item("1", "C3", "A", .ok, d),
+        ]
+        let expected = ["3", "1", "2", "4", "5", "y", "z"]
+        XCTAssertEqual(list.sorted(by: DueItem.byDate).map(\.id), expected)
+        XCTAssertEqual(list.reversed().sorted(by: DueItem.byDate).map(\.id), expected)
     }
 }

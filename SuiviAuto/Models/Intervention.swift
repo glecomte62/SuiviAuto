@@ -31,7 +31,7 @@ final class Intervention {
     }
 
     var status: InterventionStatus {
-        get { InterventionStatus(rawValue: statusRaw) ?? .facture }
+        get { InterventionStatus(rawValue: statusRaw) ?? .devis }
         set { statusRaw = newValue.rawValue }
     }
 

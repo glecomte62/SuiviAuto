@@ -44,6 +44,22 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(vidange.intervalMonths, 12)
     }
 
+    func testDefaultRulesAreIdempotent() throws {
+        let ctx = try T.makeContext()
+        let car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
+        ctx.insert(car)
+        car.addDefaultRules(in: ctx)
+        car.addDefaultRules(in: ctx)
+        try ctx.save()
+        XCTAssertEqual(car.rules.count, 3)
+    }
+
+    func testUnknownStatusFallsBackToQuote() {
+        let i = Intervention(date: .now, mileage: 0, kind: .entretien)
+        i.statusRaw = "xyz"
+        XCTAssertEqual(i.status, .devis)
+    }
+
     func testRuleKeyGeneration() {
         XCTAssertEqual(MaintenanceRule.makeKey(label: "Filtre à air", existing: []), "filtre-a-air")
         XCTAssertEqual(MaintenanceRule.makeKey(label: "Vidange", existing: ["vidange"]), "vidange-2")
