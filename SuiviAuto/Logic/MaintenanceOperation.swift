@@ -42,11 +42,11 @@ enum MaintenanceOperation: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// Mots-clés (déjà repliés : minuscules, sans accents).
+    /// Mots-clés, écrits sous forme normalisée (voir `fold`) : minuscules, sans accents, mots séparés par une espace.
     var keywords: [String] {
         switch self {
         case .vidange: ["vidange", "huile moteur"]
-        case .courroie: ["courroie", "distribution", "galet", "pompe a eau"]
+        case .courroie: ["courroie", "kit de distribution", "kit distribution", "galet", "pompe a eau"]
         case .liquideFrein: ["liquide de frein", "purge"]
         case .freins: ["plaquette", "disque"]
         case .filtres: ["filtre"]
@@ -56,14 +56,51 @@ enum MaintenanceOperation: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    static func fold(_ text: String) -> String {
+    /// Expressions (regex sur le texte normalisé) retirées du texte avant de chercher les mots-clés de cette opération.
+    var excludedPhrases: [String] {
+        switch self {
+        case .vidange: [#"vidange (?:(?:de la|du|des|de) )?(?:liquide|boite|circuit|refroidissement)"#]
+        case .freins: [#"disques? d embrayage"#]
+        default: []
+        }
+    }
+
+    /// Mots-clés trop vagues seuls : ils ne comptent que si le mot associé figure aussi dans le texte.
+    var keywordContext: [String: String] {
+        switch self {
+        case .liquideFrein: ["purge": "frein"]
+        default: [:]
+        }
+    }
+
+    /// Minuscules et sans accents, ponctuation conservée (pour l'analyse des dates et montants).
+    static func foldCaseAndAccents(_ text: String) -> String {
         text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "fr_FR"))
+    }
+
+    /// Forme normalisée pour la reconnaissance des mots-clés : `foldCaseAndAccents`, puis toute suite de caractères
+    /// non alphanumériques (espaces, retours à la ligne, apostrophes, ponctuation) remplacée par une seule espace.
+    static func fold(_ text: String) -> String {
+        foldCaseAndAccents(text)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    func matches(folded text: String) -> Bool {
+        let remaining = excludedPhrases.reduce(text) {
+            $0.replacingOccurrences(of: $1, with: " ", options: .regularExpression)
+        }
+        return keywords.contains { keyword in
+            guard remaining.contains(keyword) else { return false }
+            return keywordContext[keyword].map { remaining.contains($0) } ?? true
+        }
     }
 
     /// Opérations reconnues dans un texte, dans l'ordre du catalogue.
     static func detect(in text: String) -> [MaintenanceOperation] {
         let folded = fold(text)
-        return allCases.filter { op in op.keywords.contains { folded.contains($0) } }
+        return allCases.filter { $0.matches(folded: folded) }
     }
 
     /// Codes séparés par des virgules -> opérations connues, dédoublonnées, ordre du catalogue.

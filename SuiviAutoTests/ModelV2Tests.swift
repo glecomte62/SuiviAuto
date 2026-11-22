@@ -41,6 +41,33 @@ final class ModelV2Tests: XCTestCase {
         XCTAssertEqual(MaintenanceOperation.detect(in: "Lavage"), [])
     }
 
+    func testDetectAvoidsFalsePositives() {
+        let cases: [(String, [MaintenanceOperation])] = [
+            ("Vidange liquide de refroidissement", []),
+            ("Vidange du circuit de refroidissement", []),
+            ("Vidange boîte de vitesses", []),
+            ("Vidange + filtre à huile", [.vidange, .filtres]),
+            ("Vidange boîte + vidange moteur", [.vidange]),
+            ("Disque d'embrayage", []),
+            ("Disques et plaquettes AV", [.freins]),
+            ("Purge clim", []),
+            ("Purge du liquide de frein", [.liquideFrein]),
+            ("Purge circuit de freinage", [.liquideFrein]),
+            ("Auto Distribution SAS", []),
+            ("Kit de distribution + pompe à eau", [.courroie]),
+            ("Kit distribution", [.courroie]),
+            ("contrôle\ntechnique", [.controleTechnique]),
+        ]
+        for (text, expected) in cases {
+            XCTAssertEqual(MaintenanceOperation.detect(in: text), expected, text)
+        }
+    }
+
+    func testFoldNormalisesPunctuationButLightFoldKeepsIt() {
+        XCTAssertEqual(MaintenanceOperation.fold("  Disque d'EMBRAYAGE,\n(contrôle) "), "disque d embrayage controle")
+        XCTAssertEqual(MaintenanceOperation.foldCaseAndAccents("Payé le 05/03/2026 : 189,90 €"), "paye le 05/03/2026 : 189,90 €")
+    }
+
     func testDeadlineDefaultsAndMode() {
         let d = Deadline(label: "Pneus", dueDate: T.date("2026-01-01"), repeatsYearly: false)
         XCTAssertEqual(d.mode, .date)

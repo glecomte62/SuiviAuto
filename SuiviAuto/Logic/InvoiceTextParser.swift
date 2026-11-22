@@ -21,7 +21,7 @@ enum InvoiceTextParser {
 
     static func parse(_ text: String, calendar: Calendar = .current) -> InvoiceExtraction {
         let lines = text.components(separatedBy: .newlines)
-        let folded = lines.map { MaintenanceOperation.fold($0) }
+        let folded = lines.map { MaintenanceOperation.foldCaseAndAccents($0) }
         return InvoiceExtraction(date: findDate(folded, calendar: calendar),
                                  amountCents: findAmount(folded),
                                  mileage: findMileage(folded),
