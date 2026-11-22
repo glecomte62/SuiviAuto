@@ -25,3 +25,7 @@ Prérequis : Xcode 27+, `brew install xcodegen`.
 ## Raccourcis
 
 ⇧⌘N nouvelle voiture · ⌘N nouvelle intervention · ⌘K relevé km · Espace : Coup d'œil sur un document
+
+## Un problème, une idée ?
+
+[Signaler un problème ou proposer une idée](https://github.com/glecomte62/SuiviAuto/issues/new/choose) — sans informations personnelles, la page est publique.

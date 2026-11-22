@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📥 Télécharger SuiviAuto
+    url: https://github.com/glecomte62/SuiviAuto/releases/latest
+    about: Dernière version de l'installeur (.dmg) et notice d'installation.

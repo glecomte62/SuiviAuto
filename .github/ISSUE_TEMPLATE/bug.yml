@@ -1,0 +1,54 @@
+name: 🐞 Signaler un problème
+description: Quelque chose ne marche pas comme prévu dans SuiviAuto
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce problème !
+        ⚠️ N'indiquez pas d'informations personnelles (immatriculation, VIN, adresse…) : cette page est publique.
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Que se passe-t-il ?
+      description: Décrivez le problème en quelques phrases.
+      placeholder: "Ex. : quand je glisse une facture PDF, rien ne s'affiche."
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Comment le reproduire ?
+      description: Les étapes, dans l'ordre.
+      placeholder: |
+        1. Sélectionner une voiture
+        2. Ouvrir une intervention
+        3. Glisser un PDF…
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Qu'est-ce qui aurait dû se passer ?
+  - type: input
+    id: version-app
+    attributes:
+      label: Version de SuiviAuto
+      description: Menu SuiviAuto > À propos de SuiviAuto
+      placeholder: "1.0"
+    validations:
+      required: true
+  - type: input
+    id: version-macos
+    attributes:
+      label: Version de macOS
+      description: Menu  > À propos de ce Mac
+      placeholder: "27.2"
+    validations:
+      required: true
+  - type: textarea
+    id: captures
+    attributes:
+      label: Captures d'écran ou message d'erreur
+      description: Glissez une image ici (⇧⌘4 pour faire une capture). Masquez les informations personnelles.
