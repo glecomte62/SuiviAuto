@@ -53,7 +53,7 @@ final class PendingAttachmentsTests: XCTestCase {
         let names = pending.attach(to: intervention, in: context)
         try context.save()
 
-        XCTAssertEqual(names, [doc.fileName])
+        XCTAssertEqual(names.map(\.fileName), [doc.fileName])
         XCTAssertTrue(pending.documents.isEmpty)
         XCTAssertEqual(intervention.documents.map(\.fileName), [doc.fileName])
         pending.discard()
@@ -86,16 +86,42 @@ final class PendingAttachmentsTests: XCTestCase {
         XCTAssertTrue(store.fileExists(for: b))
     }
 
-    func testDeleteFilesAfterFailedSave() throws {
+    func testFailedSaveRestoresPendingDocuments() throws {
+        let context = try T.makeContext()
+        let deadline = Deadline(label: "Pneus", dueDate: T.date("2026-06-01"), repeatsYearly: false)
+        context.insert(deadline)
+        try context.save()
+        let pending = PendingAttachments(store: store)
+        pending.add(urls: [try makeFile("a.pdf"), try makeFile("b.png")])
+        let before = pending.documents.map { [$0.fileName, $0.originalName, $0.kindRaw] }
+
+        let attached = pending.attach(to: deadline, in: context)
+        XCTAssertTrue(pending.isEmpty)
+        context.rollback()        // échec de l'enregistrement
+        pending.restore(attached)
+
+        XCTAssertEqual(pending.documents.map { [$0.fileName, $0.originalName, $0.kindRaw] }, before)
+        XCTAssertTrue(pending.documents.allSatisfy { $0.modelContext == nil }, "documents neufs, hors contexte")
+        XCTAssertTrue(pending.documents.allSatisfy { store.fileExists(for: $0) }, "fichiers conservés")
+        XCTAssertTrue(deadline.documents.isEmpty)
+
+        // Nouvel essai réussi.
+        pending.attach(to: deadline, in: context)
+        try context.save()
+        XCTAssertEqual(Set(deadline.documents.map(\.originalName)), ["a.pdf", "b.png"])
+    }
+
+    func testRestoredDocumentsAreDeletedOnDiscard() throws {
         let context = try T.makeContext()
         let deadline = Deadline(label: "Pneus", dueDate: T.date("2026-06-01"), repeatsYearly: false)
         context.insert(deadline)
         let pending = PendingAttachments(store: store)
         pending.add(urls: [try makeFile("a.pdf")])
-        let doc = pending.documents[0]
-        let names = pending.attach(to: deadline, in: context)
+        let attached = pending.attach(to: deadline, in: context)
         context.rollback()
-        pending.deleteFiles(named: names)
+        pending.restore(attached)
+        let doc = try XCTUnwrap(pending.documents.first)
+        pending.discard()
         XCTAssertFalse(store.fileExists(for: doc))
     }
 

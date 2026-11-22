@@ -56,6 +56,23 @@ final class DeletionServiceTests: XCTestCase {
         XCTAssertEqual(i.documents.count, 0)
     }
 
+    func testSaveDeletingDocumentsAppliesEditsAndRemovesFiles() throws {
+        let (_, i, doc) = try makeCarWithDocument()
+        let url = store.url(for: doc)
+        i.title = "Vidange"
+        try DeletionService.save(ctx, deleting: [doc], store: store)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertEqual(i.documents.count, 0)
+        XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<StoredDocument>()), 0)
+        XCTAssertFalse(ctx.hasChanges)
+    }
+
+    func testSaveDeletingNothingKeepsFiles() throws {
+        let (_, _, doc) = try makeCarWithDocument()
+        try DeletionService.save(ctx, deleting: [], store: store)
+        XCTAssertTrue(store.fileExists(for: doc))
+    }
+
     func testDeleteRecordRemovesPlainModel() throws {
         let car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
         ctx.insert(car)

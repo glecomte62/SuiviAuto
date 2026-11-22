@@ -34,6 +34,8 @@ struct InterventionFormView: View {
     @State private var customOperation = ""
     /// Échéance à solder à CET enregistrement (jamais mémorisée : un nouvel enregistrement ne la solde pas deux fois).
     @State private var completingDeadline: Deadline?
+    /// État de l'échéance au moment où elle a été choisie : une validation faite ailleurs entre-temps est refusée.
+    @State private var completingSnapshot: DeadlineSnapshot?
     @State private var pending = PendingAttachments()
     @State private var showingDetected = false
     @State private var extraction: InvoiceExtraction?
@@ -142,6 +144,7 @@ struct InterventionFormView: View {
         }
         .frame(width: 560)
         .onAppear(perform: load)
+        .onChange(of: completingDeadline) { _, new in completingSnapshot = new.map(DeadlineSnapshot.init) }
         // Ignoré quand c'est la feuille « Nouveau garage » qui masque ce formulaire.
         .onDisappear { if !saved && !creatingGarage { pending.discard() } }
         .confirmationDialog("Kilométrage inférieur au dernier connu", isPresented: $showLowMileageWarning) {
@@ -170,6 +173,7 @@ struct InterventionFormView: View {
                 title = d.label
                 for op in MaintenanceOperation.detect(in: d.label) { setOperation(op, checked: true) }
                 completingDeadline = d
+                completingSnapshot = DeadlineSnapshot(d)
             }
             return
         }
@@ -200,6 +204,14 @@ struct InterventionFormView: View {
     }
 
     private func save() {
+        if let deadline = completingDeadline {
+            guard let snapshot = completingSnapshot,
+                  DeadlineService.isStillPending(deadline, snapshot: snapshot, in: car) else {
+                completingDeadline = nil
+                errorMessage = DeadlineService.changedElsewhereMessage
+                return
+            }
+        }
         let target: Intervention
         if let intervention {
             target = intervention
@@ -244,8 +256,8 @@ struct InterventionFormView: View {
         } catch {
             // `complete` peut échouer avant d'enregistrer : on annule aussi dans ce cas (sans effet si déjà fait).
             context.rollback()
-            // Les documents insérés ont disparu avec le rollback : leurs fichiers ne doivent pas rester orphelins.
-            pending.deleteFiles(named: attached)
+            // Les documents insérés ont disparu avec le rollback : on les remet en attente pour un nouvel essai.
+            pending.restore(attached)
             errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
     }

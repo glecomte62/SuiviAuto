@@ -36,26 +36,40 @@ final class PendingAttachments {
         store.delete(fileName: document.fileName)
     }
 
-    /// Insère et relie les documents ; renvoie les noms de fichiers attachés, à passer à `deleteFiles(named:)`
-    /// si l'enregistrement qui suit échoue (le rollback retire les documents du contexte, pas les fichiers).
+    /// Description d'un document en attente, indépendante du contexte SwiftData.
+    struct Snapshot: Equatable {
+        let fileName: String
+        let originalName: String
+        let kind: DocumentKind
+        let addedAt: Date
+    }
+
+    /// Insère et relie les documents ; renvoie leur description, à passer à `restore(_:)` si l'enregistrement
+    /// qui suit échoue (le rollback retire du contexte les documents insérés, mais leurs fichiers restent).
     @discardableResult
-    func attach(to intervention: Intervention, in context: ModelContext) -> [String] {
-        let names = documents.map(\.fileName)
-        for doc in documents { context.insert(doc); doc.intervention = intervention }
-        documents = []
-        return names
+    func attach(to intervention: Intervention, in context: ModelContext) -> [Snapshot] {
+        attach(in: context) { $0.intervention = intervention }
     }
 
     @discardableResult
-    func attach(to deadline: Deadline, in context: ModelContext) -> [String] {
-        let names = documents.map(\.fileName)
-        for doc in documents { context.insert(doc); doc.deadline = deadline }
-        documents = []
-        return names
+    func attach(to deadline: Deadline, in context: ModelContext) -> [Snapshot] {
+        attach(in: context) { $0.deadline = deadline }
     }
 
-    func deleteFiles(named names: [String]) {
-        names.forEach(store.delete(fileName:))
+    private func attach(in context: ModelContext, link: (StoredDocument) -> Void) -> [Snapshot] {
+        let snapshot = documents.map {
+            Snapshot(fileName: $0.fileName, originalName: $0.originalName, kind: $0.kind, addedAt: $0.addedAt)
+        }
+        for doc in documents { context.insert(doc); link(doc) }
+        documents = []
+        return snapshot
+    }
+
+    /// Après un enregistrement manqué : remet les documents en attente (objets neufs, fichiers inchangés).
+    func restore(_ snapshot: [Snapshot]) {
+        documents.append(contentsOf: snapshot.map {
+            StoredDocument(fileName: $0.fileName, originalName: $0.originalName, kind: $0.kind, addedAt: $0.addedAt)
+        })
     }
 
     func discard() {

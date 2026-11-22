@@ -52,6 +52,14 @@ enum DeletionService {
         try saveOrRollback(context)
     }
 
+    /// Enregistre les modifications en cours en supprimant au passage ces documents ; fichiers effacés après succès.
+    static func save(_ context: ModelContext, deleting documents: [StoredDocument], store: DocumentStore = .shared) throws {
+        let names = documents.map(\.fileName)
+        documents.forEach(context.delete)
+        try saveOrRollback(context)
+        names.forEach(store.delete(fileName:))
+    }
+
     static func delete(_ document: StoredDocument, in context: ModelContext, store: DocumentStore = .shared) throws {
         let name = document.fileName
         context.delete(document)

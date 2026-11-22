@@ -14,6 +14,8 @@ struct DeadlineFormView: View {
     @State private var intervalKmText = ""
     @State private var notes = ""
     @State private var pending = PendingAttachments()
+    /// Documents existants retirés : supprimés seulement à l'enregistrement (« Annuler » les conserve).
+    @State private var removedExisting: [StoredDocument] = []
     @State private var saved = false
     @State private var loaded = false
     @State private var errorMessage: String?
@@ -51,8 +53,9 @@ struct DeadlineFormView: View {
                     }
                     TextField("Notes", text: $notes, axis: .vertical).lineLimit(2...4)
                 }
-                AttachmentsSection(pending: pending, existing: deadline?.documents ?? [],
-                                   onDeleteExisting: deleteExisting)
+                AttachmentsSection(pending: pending,
+                                   existing: (deadline?.documents ?? []).filter { doc in !removedExisting.contains { $0 === doc } },
+                                   onDeleteExisting: { removedExisting.append($0) })
             }
             .formStyle(.grouped)
             HStack {
@@ -86,12 +89,11 @@ struct DeadlineFormView: View {
         intervalKmText = deadline.intervalKm.map(String.init) ?? ""
     }
 
-    private func deleteExisting(_ doc: StoredDocument) {
-        do { try DeletionService.delete(doc, in: context) }
-        catch { errorMessage = "Suppression impossible : \(error.localizedDescription)" }
-    }
-
     private func save() {
+        if let deadline, !DeadlineService.isStillPresent(deadline, in: car) {
+            errorMessage = DeadlineService.changedElsewhereMessage
+            return
+        }
         let target: Deadline
         if let deadline {
             target = deadline
@@ -116,11 +118,13 @@ struct DeadlineFormView: View {
         }
         let attached = pending.attach(to: target, in: context)
         do {
-            try DeletionService.saveOrRollback(context)
+            try DeletionService.save(context, deleting: removedExisting)
+            removedExisting = []
             saved = true
             dismiss()
         } catch {
-            pending.deleteFiles(named: attached)
+            // Rollback déjà fait : les documents ajoutés repassent en attente, les retraits restent à appliquer.
+            pending.restore(attached)
             errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
     }

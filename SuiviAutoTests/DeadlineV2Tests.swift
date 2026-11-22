@@ -192,3 +192,58 @@ final class DeadlineV2Tests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: f2.path))
     }
 }
+
+final class DeadlineGuardTests: XCTestCase {
+    var ctx: ModelContext!
+    var car: Car!
+    var deadline: Deadline!
+
+    override func setUpWithError() throws {
+        ctx = try T.makeContext()
+        car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
+        ctx.insert(car)
+        deadline = Deadline(label: "Courroie", dueDate: T.date("2026-06-01"), repeatsYearly: true)
+        ctx.insert(deadline); deadline.car = car
+        try ctx.save()
+    }
+
+    func testUnchangedDeadlineIsStillPending() {
+        let snap = DeadlineSnapshot(deadline)
+        XCTAssertTrue(DeadlineService.isStillPresent(deadline, in: car))
+        XCTAssertTrue(DeadlineService.isStillPending(deadline, snapshot: snap, in: car))
+    }
+
+    func testDeletedDeadlineIsNotPending() throws {
+        let snap = DeadlineSnapshot(deadline)
+        ctx.delete(deadline)
+        XCTAssertFalse(DeadlineService.isStillPending(deadline, snapshot: snap, in: car), "supprimée, pas encore enregistrée")
+        try ctx.save()
+        XCTAssertFalse(DeadlineService.isStillPresent(deadline, in: car))
+        XCTAssertFalse(DeadlineService.isStillPending(deadline, snapshot: snap, in: car))
+    }
+
+    func testDeadlineMovedToAnotherCarIsNotPending() throws {
+        let snap = DeadlineSnapshot(deadline)
+        let other = Car(name: "Zoé", firstRegistrationDate: T.date("2021-01-01"))
+        ctx.insert(other)
+        deadline.car = other
+        try ctx.save()
+        XCTAssertFalse(DeadlineService.isStillPending(deadline, snapshot: snap, in: car))
+    }
+
+    func testCompletedElsewhereIsNotPending() throws {
+        let snap = DeadlineSnapshot(deadline)
+        deadline.markDone(calendar: T.calendar)   // avancée d'un an ailleurs
+        XCTAssertTrue(DeadlineService.isStillPresent(deadline, in: car))
+        XCTAssertFalse(DeadlineService.isStillPending(deadline, snapshot: snap, in: car))
+    }
+
+    func testKmTargetChangeIsDetected() {
+        deadline.mode = .km
+        deadline.targetMileage = 90_000
+        deadline.intervalKm = 15_000
+        let snap = DeadlineSnapshot(deadline)
+        _ = deadline.complete(on: T.date("2026-03-01"), mileage: 88_000, calendar: T.calendar)
+        XCTAssertFalse(DeadlineService.isStillPending(deadline, snapshot: snap, in: car))
+    }
+}
