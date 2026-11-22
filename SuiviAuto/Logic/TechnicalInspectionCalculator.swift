@@ -22,8 +22,9 @@ enum TechnicalInspectionCalculator {
         /// Date du CT initial défavorable dont la contre-visite est en attente.
         var anchor: Date?
 
+        // Comparaisons au jour près : l'heure de saisie n'a pas d'importance.
         // Tri par date ; le même jour, les échecs passent avant le favorable (ordre déterministe).
-        let sorted = records.sorted {
+        let sorted = records.map { CTRecord(date: calendar.startOfDay(for: $0.date), result: $0.result) }.sorted {
             if $0.date != $1.date { return $0.date < $1.date }
             return $0.result != .favorable && $1.result == .favorable
         }

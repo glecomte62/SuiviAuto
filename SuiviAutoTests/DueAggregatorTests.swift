@@ -95,6 +95,25 @@ final class DueAggregatorTests: XCTestCase {
         XCTAssertEqual(CarAnalytics.lastKnownMileage(for: car, onOrBefore: T.date("2024-06-01")), nil)
     }
 
+    func testLastKnownMileageCountsSameDayPointEnteredLater() throws {
+        let r = OdometerReading(date: T.date("2025-03-10", hour: 18), mileage: 40_000)
+        ctx.insert(r); r.car = car
+        try ctx.save()
+        // saisie le même jour, mais à une heure antérieure (ex. formulaire ouvert le matin)
+        XCTAssertEqual(CarAnalytics.lastKnownMileage(for: car, onOrBefore: T.date("2025-03-10", hour: 8), calendar: T.calendar), 40_000)
+        XCTAssertNil(CarAnalytics.lastKnownMileage(for: car, onOrBefore: T.date("2025-03-09", hour: 23), calendar: T.calendar))
+    }
+
+    func testRuleLastDoneOnSameDayUsesHighestMileage() throws {
+        // deux factures le même jour : l'heure de saisie ne décide pas, le km le plus élevé l'emporte
+        let a = addIntervention("2025-03-01", km: 40_000, kind: .entretien, ruleKey: "vidange")
+        a.date = T.date("2025-03-01", hour: 8)
+        let b = addIntervention("2025-03-01", km: 39_000, kind: .entretien, ruleKey: "vidange")
+        b.date = T.date("2025-03-01", hour: 18)
+        try ctx.save()
+        XCTAssertEqual(items().first { $0.label == "Vidange moteur" }!.dueKm, 55_000)
+    }
+
     func testCostEntries() throws {
         addIntervention("2026-01-05", km: 50_000, kind: .pneus, cents: 40_000)
         addIntervention("2026-01-06", km: 50_000, kind: .pneus)  // sans montant : ignorée

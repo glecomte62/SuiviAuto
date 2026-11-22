@@ -31,6 +31,7 @@ final class Intervention {
     }
 
     var status: InterventionStatus {
+        // Valeur inconnue : on retient « devis » par prudence (jamais compté comme dépense ni comme entretien fait).
         get { InterventionStatus(rawValue: statusRaw) ?? .devis }
         set { statusRaw = newValue.rawValue }
     }

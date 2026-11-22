@@ -48,7 +48,8 @@ enum DueAggregator {
                         now: Date, calendar: Calendar = .current) -> MaintenanceDue {
         let last = car.interventions
             .filter { $0.status == .facture && $0.ruleKey == rule.key }
-            .max { ($0.date, $0.mileage) < ($1.date, $1.mileage) }
+            // au jour près : le même jour, le km le plus élevé l'emporte (l'heure de saisie ne compte pas)
+            .max { (calendar.startOfDay(for: $0.date), $0.mileage) < (calendar.startOfDay(for: $1.date), $1.mileage) }
         return MaintenanceScheduler.due(
             rule: RuleSpec(label: rule.label, intervalKm: rule.intervalKm, intervalMonths: rule.intervalMonths),
             lastDone: last.map { MileagePoint(date: $0.date, km: $0.mileage) },

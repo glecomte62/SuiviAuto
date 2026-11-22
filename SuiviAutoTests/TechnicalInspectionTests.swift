@@ -36,6 +36,24 @@ final class TechnicalInspectionTests: XCTestCase {
         XCTAssertEqual(d, CTDue(dueDate: T.date("2026-03-10"), isCounterVisit: false, drivingForbidden: false))
     }
 
+    func testCounterVisitWindowComparesCalendarDays() {
+        // contre-visite le dernier jour de la fenêtre, plus tard dans la journée que le CT initial
+        let d = due([
+            CTRecord(date: T.date("2024-03-10", hour: 8), result: .defavorable),
+            CTRecord(date: T.date("2024-05-10", hour: 18), result: .favorable),
+        ])
+        XCTAssertEqual(d, CTDue(dueDate: T.date("2026-03-10"), isCounterVisit: false, drivingForbidden: false))
+    }
+
+    func testSameDayOrderingIgnoresTimeOfDay() {
+        // même jour : l'échec passe avant le favorable, même saisi avec une heure plus tardive
+        let d = due([
+            CTRecord(date: T.date("2024-03-10", hour: 8), result: .favorable),
+            CTRecord(date: T.date("2024-03-10", hour: 18), result: .defavorable),
+        ])
+        XCTAssertEqual(d, CTDue(dueDate: T.date("2026-03-10"), isCounterVisit: false, drivingForbidden: false))
+    }
+
     func testLateCounterVisitCountsAsNewInspection() {
         let d = due([
             CTRecord(date: T.date("2024-03-10"), result: .defavorable),

@@ -15,6 +15,22 @@ final class MileageEstimatorTests: XCTestCase {
         XCTAssertNil(e.estimatedDate(forMileage: 1000))
     }
 
+    func testLatestOnSameDayIsHighestMileageRegardlessOfTime() {
+        let e = MileageEstimator(points: [MileagePoint(date: T.date("2025-06-01", hour: 8), km: 42_100),
+                                          MileagePoint(date: T.date("2025-06-01", hour: 18), km: 42_000)],
+                                 now: T.date("2026-01-01"), calendar: T.calendar)
+        XCTAssertEqual(e.latest?.km, 42_100)
+    }
+
+    func testSameDayPointsGiveNoRate() {
+        // deux relevés le même jour à 10 h d'écart : pas de moyenne absurde (240 km/j)
+        let e = MileageEstimator(points: [MileagePoint(date: T.date("2025-06-01", hour: 8), km: 42_000),
+                                          MileagePoint(date: T.date("2025-06-01", hour: 18), km: 42_100)],
+                                 now: T.date("2026-01-01"), calendar: T.calendar)
+        XCTAssertNil(e.kmPerDay)
+        XCTAssertEqual(e.estimatedCurrentMileage, 42_100)
+    }
+
     func testSinglePoint() {
         let e = make([("2025-06-01", 42_000)], now: "2026-01-01")
         XCTAssertNil(e.kmPerDay)

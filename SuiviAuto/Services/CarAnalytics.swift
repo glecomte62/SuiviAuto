@@ -25,9 +25,12 @@ enum CarAnalytics {
         MileageEstimator(points: mileagePoints(for: car), now: now, calendar: calendar)
     }
 
-    /// Plus grand km connu à une date donnée (pour avertir d'une saisie incohérente).
-    static func lastKnownMileage(for car: Car, onOrBefore date: Date, excluding: Intervention? = nil) -> Int? {
-        mileagePoints(for: car, excluding: excluding).filter { $0.date <= date }.map(\.km).max()
+    /// Plus grand km connu à une date donnée, journée entière incluse (pour avertir d'une saisie incohérente).
+    static func lastKnownMileage(for car: Car, onOrBefore date: Date, excluding: Intervention? = nil,
+                                 calendar: Calendar = .current) -> Int? {
+        let day = calendar.startOfDay(for: date)
+        return mileagePoints(for: car, excluding: excluding)
+            .filter { calendar.startOfDay(for: $0.date) <= day }.map(\.km).max()
     }
 
     static func costEntries(for cars: [Car]) -> [CostEntry] {
