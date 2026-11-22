@@ -236,4 +236,21 @@ final class BackupServiceTests: XCTestCase {
         XCTAssertEqual(lines[1], "\"Clio; rouge\";05/03/2026;45000;Entretien;\"Vidange \"\"complète\"\"\";Garage du Nord;189,90;Facture")
         XCTAssertEqual(lines[2], "\"Clio; rouge\";01/04/2026;46000;Pneus;Pneus;;;Devis")
     }
+
+    func testCSVUsesLinkedGarageName() throws {
+        let ctx = try T.makeContext()
+        let car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
+        ctx.insert(car)
+        let g = Garage(name: "Garage du Nord")
+        ctx.insert(g)
+        let i = Intervention(date: T.date("2026-03-05"), mileage: 45_000, kind: .entretien, title: "Vidange")
+        i.garage = "ancien texte"
+        ctx.insert(i)
+        i.car = car
+        i.garageRef = g
+        try ctx.save()
+
+        let lines = BackupService.csv(for: [i], calendar: T.calendar).dropFirst().components(separatedBy: "\r\n")
+        XCTAssertEqual(lines[1], "Clio;05/03/2026;45000;Entretien;Vidange;Garage du Nord;;Facture")
+    }
 }

@@ -210,7 +210,7 @@ enum BackupService {
                 String(i.mileage),
                 field(i.kind.label),
                 field(i.displayTitle),
-                field(i.garage),
+                field(i.garageDisplayName),
                 i.amountCents.map(Money.editString(cents:)) ?? "",
                 i.status.label,
             ].joined(separator: ";")
