@@ -13,12 +13,12 @@ enum Carnet {
         let needle = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
         return car.interventions
             .filter { $0.status == .facture }
-            .filter { query.operation == nil || $0.operations.contains(query.operation!) }
+            .filter { i in query.operation.map { i.operations.contains($0) } ?? true }
             .filter { query.year == nil || calendar.component(.year, from: $0.date) == query.year }
             .filter { query.garageID == nil || $0.garageRef?.uuid == query.garageID }
             .filter { i in
                 needle.isEmpty || [i.title, i.operationsSummary, i.garageDisplayName, i.notes, i.kind.label]
-                    .contains { $0.localizedCaseInsensitiveContains(needle) }
+                    .contains { $0.localizedStandardContains(needle) }
             }
             .sorted { ($0.date, $0.mileage) > ($1.date, $1.mileage) }
     }
@@ -32,9 +32,10 @@ enum Carnet {
             .sorted(by: >)
     }
 
+    /// Garages des factures du carnet (les devis n'y figurent pas).
     static func garages(for car: Car) -> [Garage] {
         var seen = Set<UUID>()
-        let garages = car.interventions.compactMap(\.garageRef).filter { seen.insert($0.uuid).inserted }
+        let garages = car.interventions.filter { $0.status == .facture }.compactMap(\.garageRef).filter { seen.insert($0.uuid).inserted }
         return GarageService.sorted(garages)
     }
 

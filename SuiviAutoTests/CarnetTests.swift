@@ -73,4 +73,62 @@ final class CarnetTests: XCTestCase {
         let data = CarnetPDFExporter.render(car: car, entries: entries, estimatedMileage: nil, calendar: T.calendar)
         XCTAssertGreaterThan(try XCTUnwrap(PDFDocument(data: data)).pageCount, 1)
     }
+
+    // MARK: - Revue de code
+
+    func testGaragesOnlyFromInvoices() throws {
+        let devisOnly = Garage(name: "Autre garage")
+        ctx.insert(devisOnly)
+        add("2025-07-01", km: 56_000, ops: [.pneus], cents: 1_000, garage: devisOnly, status: .devis)
+        try ctx.save()
+        XCTAssertEqual(Carnet.garages(for: car).map(\.name), ["Garage du Nord"])
+    }
+
+    func testSearchIgnoresAccents() throws {
+        add("2025-10-01", km: 60_000, ops: [], cents: 7_800, garage: nil, title: "Contrôle technique")
+        try ctx.save()
+        XCTAssertEqual(Carnet.entries(for: car, query: CarnetQuery(text: "controle"), calendar: T.calendar).map(\.mileage), [60_000])
+        XCTAssertEqual(Carnet.entries(for: car, query: CarnetQuery(text: "CONTRÔLE"), calendar: T.calendar).map(\.mileage), [60_000])
+    }
+
+    /// Colonnes du PDF : opérations longues et garage long restent dans leur colonne, montant à droite.
+    func testPDFColumns() throws {
+        let renault = Garage(name: "Garage Renault Lille Centre")
+        ctx.insert(renault)
+        let i = add("2026-03-05", km: 123_456, ops: [.vidange, .courroie, .liquideFrein, .freins, .pneus, .filtres],
+                    cents: 123_456, garage: renault)
+        try ctx.save()
+        let data = CarnetPDFExporter.render(car: car, entries: [i], estimatedMileage: nil, calendar: T.calendar)
+        let doc = try XCTUnwrap(PDFDocument(data: data))
+        let page = try XCTUnwrap(doc.page(at: 0))
+        let garage = try XCTUnwrap(doc.findString("Garage Renault", withOptions: []).first)
+        XCTAssertGreaterThanOrEqual(garage.bounds(for: page).minX, 340)
+        let amount = try XCTUnwrap(doc.findString("1 234,56", withOptions: []).first)
+        XCTAssertGreaterThan(amount.bounds(for: page).minX, 450)
+        let header = try XCTUnwrap(doc.findString("Montant", withOptions: []).first)
+        XCTAssertGreaterThan(header.bounds(for: page).minX, 450)
+        // les opérations repliées restent dans la colonne « Opérations » (pas sous la date)
+        for sel in doc.findString("Filtres", withOptions: []) {
+            let x = sel.bounds(for: page).minX
+            XCTAssertTrue((175..<380).contains(x), "Filtres à x=\(x)")
+        }
+    }
+
+    func testPDFStripsTabsAndNewlinesAndNumbersPages() throws {
+        let i = add("2026-03-05", km: 70_000, ops: [], cents: 5_000, garage: nil, title: "Balais\tAV\nAR")
+        for n in 0..<120 { add("2023-01-01", km: 1_000 + n, ops: [.vidange], cents: 100, garage: nil) }
+        try ctx.save()
+        let entries = Carnet.entries(for: car, query: CarnetQuery(), calendar: T.calendar)
+        let doc = try XCTUnwrap(PDFDocument(data: CarnetPDFExporter.render(car: car, entries: entries, estimatedMileage: nil, calendar: T.calendar)))
+        let n = doc.pageCount
+        XCTAssertGreaterThan(n, 1)
+        XCTAssertTrue(doc.page(at: 0)?.string?.contains("page 1 / \(n)") ?? false)
+        XCTAssertTrue(doc.page(at: n - 1)?.string?.contains("page \(n) / \(n)") ?? false)
+        XCTAssertTrue(doc.page(at: 1)?.string?.contains("Opérations") ?? false, "en-tête répété page 2")
+        XCTAssertEqual(i.title, "Balais\tAV\nAR")
+        let first = try XCTUnwrap(doc.findString("Balais", withOptions: []).first)
+        let page = try XCTUnwrap(first.pages.first)
+        let ar = try XCTUnwrap(doc.findString("AR", withOptions: [.caseInsensitive]).first { $0.pages.first == page && abs($0.bounds(for: page).midY - first.bounds(for: page).midY) < 3 })
+        XCTAssertGreaterThan(ar.bounds(for: page).minX, first.bounds(for: page).minX)
+    }
 }
