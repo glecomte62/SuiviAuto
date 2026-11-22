@@ -23,7 +23,7 @@ Contrainte forte : SuiviAuto 1.0 est déjà distribuée. Les bases et les sauveg
 | website | String | « » |
 | openingHours | String | texte libre multiligne |
 | specialties | String | texte libre, ex. « Renault, pneus, carrosserie » |
-| rating | Int | 0 à 5 ; 0 = non noté ; borné à l'écriture |
+| rating | Int | 0 à 5 ; 0 = non noté ; borné (stocké dans `ratingValue`, exposé par la propriété calculée `rating`) |
 | review | String | avis privé, multiligne |
 | createdAt | Date | |
 | contacts | [GarageContact] | suppression en cascade |
@@ -54,17 +54,17 @@ Tous les nouveaux attributs ont une valeur par défaut ou sont optionnels : Swif
 
 Exécutée au lancement, après l'ouverture de la base (et donc aussi après une restauration de sauvegarde, qui relance l'app).
 
-- Pour chaque intervention avec `garageRef == nil` et `garage` non vide après nettoyage :
+- Pour chaque intervention avec `garageRef == nil`, `garageTextMigrated == false` et `garage` non vide après nettoyage :
   - clé de regroupement = nom sans espaces superflus (début, fin, multiples), insensible à la casse et aux accents ;
   - si un Garage existant a la même clé, on le relie ; sinon on crée un Garage dont le nom est la **première graphie rencontrée** (interventions triées par date croissante), nettoyée des espaces.
-- Le texte `garage` de l'intervention n'est **jamais modifié**.
+- Le texte `garage` de l'intervention n'est **jamais modifié** ; `garageTextMigrated` passe à vrai.
 - Idempotente : une seconde exécution ne crée rien et ne change rien.
 - Une seule sauvegarde du contexte à la fin ; en cas d'échec : annulation (rollback) et l'app continue avec les noms texte (message d'erreur non bloquant).
 
 ## 4. Règles de gestion
 
 - **Suppression d'un garage** (après confirmation indiquant le nombre d'interventions liées) :
-  - chaque intervention liée reçoit `garage = nom du garage` (pour garder l'historique), puis le lien est retiré ;
+  - chaque intervention liée reçoit `garage = nom du garage` (pour garder l'historique) et `garageTextMigrated = true`, puis le lien est retiré ;
   - les contacts du garage sont supprimés ;
   - une seule sauvegarde, avec rollback en cas d'échec.
 - **Renommer un garage** met à jour l'affichage de toutes ses interventions (via le lien).
