@@ -114,15 +114,14 @@ enum BackupService {
         }
     }
 
-    /// Préfixes des copies de sécurité automatiques (avant restauration, avant la mise à jour 1.1).
-    static let safetyCopyPrefixes = ["SuiviAuto-avant-restauration-", UpgradeBackup.folderPrefix]
-
-    /// Copie de sécurité la plus récente dans `directory` (tous types confondus, d'après la date du nom).
+    /// Copie de sécurité la plus récente dans `directory` : tout dossier « SuiviAuto-avant-* »
+    /// (restaurations et mises à jour), d'après l'horodatage final « yyyyMMdd-HHmmss » (suffixe « -n » éventuel).
     static func latestSafetyCopy(in directory: URL = AppPaths.baseURL.deletingLastPathComponent()) -> URL? {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         let dated: [(stamp: String, name: String)] = names.compactMap { name in
-            guard let prefix = safetyCopyPrefixes.first(where: { name.hasPrefix($0) }) else { return nil }
-            return (String(name.dropFirst(prefix.count)), name)
+            guard name.hasPrefix(UpgradeBackup.folderPrefixBase),
+                  let range = name.range(of: #"\d{8}-\d{6}(-\d+)?$"#, options: .regularExpression) else { return nil }
+            return (String(name[range]), name)
         }
         return dated
             .max { $0.stamp.localizedStandardCompare($1.stamp) == .orderedAscending }

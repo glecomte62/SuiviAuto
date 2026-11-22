@@ -27,7 +27,7 @@ final class UpgradeBackupTests: XCTestCase {
         try fm.createDirectory(at: support, withIntermediateDirectories: true)
         try Data("blob".utf8).write(to: support.appendingPathComponent("x"))
 
-        let copy = try XCTUnwrap(UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: localDate(2026, 11, 22, 9, 5, 7)))
+        let copy = try XCTUnwrap(UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: localDate(2026, 11, 22, 9, 5, 7), version: "1.1"))
 
         XCTAssertEqual(copy.deletingLastPathComponent().standardizedFileURL, root.standardizedFileURL)
         XCTAssertEqual(copy.lastPathComponent, "SuiviAuto-avant-1.1-20261122-090507")
@@ -46,11 +46,21 @@ final class UpgradeBackupTests: XCTestCase {
         XCTAssertFalse(try UpgradeBackup.isCompatibleWithCurrentModel(storeURL: store))
     }
 
+    func testFolderNameUsesAppVersion() throws {
+        XCTExpectFailure("passe après la Task 2")
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        let store = try T.copyFixture("v1_1", to: tmp.appendingPathComponent("SuiviAuto"))
+        let copy = try XCTUnwrap(try UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: T.date("2026-11-23"), version: "2.0"))
+        XCTAssertTrue(copy.lastPathComponent.hasPrefix("SuiviAuto-avant-2.0-"), copy.lastPathComponent)
+    }
+
     func testSecondCopyWithSameTimestampDoesNotOverwrite() throws {
         let store = try T.copyV10Fixture(to: base)
         let now = localDate(2026, 11, 22, 9, 5, 7)
-        let first = try XCTUnwrap(UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: now))
-        let second = try XCTUnwrap(UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: now))
+        let first = try XCTUnwrap(UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: now, version: "1.1"))
+        let second = try XCTUnwrap(UpgradeBackup.backupIfNeedsMigration(storeURL: store, now: now, version: "1.1"))
         XCTAssertNotEqual(first, second)
         XCTAssertEqual(second.lastPathComponent, "SuiviAuto-avant-1.1-20261122-090507-2")
     }

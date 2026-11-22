@@ -28,13 +28,17 @@ extension T {
 }
 
 extension T {
-    /// Copie la base 1.0 de référence (fichiers `SuiviAuto.store*` uniquement) dans `directory`.
+    /// Copie la base 1.0 de référence dans `directory`.
+    @discardableResult
+    static func copyV10Fixture(to directory: URL) throws -> URL { try copyFixture("v1_0", to: directory) }
+
+    /// Copie la base de référence `name` ("v1_0", "v1_1"; fichiers `SuiviAuto.store*` uniquement) dans `directory`.
     /// Échoue si le fichier versionné est absent ou n'est pas une vraie base SQLite (ex. emplacement iCloud non téléchargé).
     @discardableResult
-    static func copyV10Fixture(to directory: URL) throws -> URL {
+    static func copyFixture(_ name: String, to directory: URL) throws -> URL {
         let fm = FileManager.default
         let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/v1_0", isDirectory: true)
+            .appendingPathComponent("Fixtures/\(name)", isDirectory: true)
         let store = fixture.appendingPathComponent("SuiviAuto.store")
         guard fm.fileExists(atPath: store.path) else { throw FixtureError.missing(store.path) }
         let header = try FileHandle(forReadingFrom: store).read(upToCount: 16) ?? Data()
