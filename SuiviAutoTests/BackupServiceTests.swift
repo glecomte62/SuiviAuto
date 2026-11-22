@@ -23,24 +23,76 @@ final class BackupServiceTests: XCTestCase {
 
     func read(_ url: URL) throws -> String { String(decoding: try Data(contentsOf: url), as: UTF8.self) }
 
+    /// Crée une vraie base SwiftData contenant une voiture ; le conteneur est libéré au retour.
+    func makeRealStore(at storeURL: URL, carName: String) throws {
+        for suffix in ["", "-wal", "-shm"] { try? fm.removeItem(atPath: storeURL.path + suffix) }
+        try autoreleasepool {
+            let container = try ModelContainer(for: Schema(SchemaModels.all),
+                                               configurations: ModelConfiguration(url: storeURL))
+            let ctx = ModelContext(container)
+            ctx.insert(Car(name: carName, firstRegistrationDate: T.date("2020-01-01")))
+            try ctx.save()
+        }
+    }
+
+    func carNames(in storeURL: URL) throws -> [String] {
+        try autoreleasepool {
+            let container = try ModelContainer(for: Schema(SchemaModels.all),
+                                               configurations: ModelConfiguration(url: storeURL))
+            return try ModelContext(container).fetch(FetchDescriptor<Car>()).map(\.name)
+        }
+    }
+
     func testExportStageAndApplyRoundTrip() throws {
+        let store = base.appendingPathComponent("SuiviAuto.store")
+        try makeRealStore(at: store, carName: "Clio")
         let zip = root.appendingPathComponent("sauvegarde.zip")
         try BackupService.exportBackup(to: zip, base: base)
         XCTAssertTrue(fm.fileExists(atPath: zip.path))
 
         // les données changent après la sauvegarde
-        try Data("store-v2".utf8).write(to: base.appendingPathComponent("SuiviAuto.store"))
+        try makeRealStore(at: store, carName: "Mégane")
 
         try BackupService.stageRestore(from: zip, pending: pending)
         XCTAssertTrue(fm.fileExists(atPath: pending.appendingPathComponent("SuiviAuto.store").path))
 
         try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending, now: localDate(2026, 3, 5, 14, 7, 9))
-        XCTAssertEqual(try read(base.appendingPathComponent("SuiviAuto.store")), "store-v1")
+        XCTAssertEqual(try carNames(in: store), ["Clio"])
         XCTAssertEqual(try read(base.appendingPathComponent("Documents/a.pdf")), "pdf")
         XCTAssertFalse(fm.fileExists(atPath: pending.path))
 
         let previous = root.appendingPathComponent("SuiviAuto-avant-restauration-20260305-140709/SuiviAuto.store")
-        XCTAssertEqual(try read(previous), "store-v2")
+        XCTAssertEqual(try carNames(in: previous), ["Mégane"])
+    }
+
+    func testStageRejectsUnreadableStore() throws {
+        // base de setUp : « SuiviAuto.store » est un fichier texte, pas une base SQLite
+        let zip = root.appendingPathComponent("corrompue.zip")
+        try BackupService.exportBackup(to: zip, base: base)
+        XCTAssertThrowsError(try BackupService.stageRestore(from: zip, pending: pending)) {
+            XCTAssertEqual($0 as? BackupService.BackupError, .unreadableStore)
+        }
+        XCTAssertFalse(fm.fileExists(atPath: pending.path))
+    }
+
+    func testStageRejectionKeepsExistingPending() throws {
+        try makePending("précédente")
+        let zip = root.appendingPathComponent("corrompue.zip")
+        try BackupService.exportBackup(to: zip, base: base)
+        XCTAssertThrowsError(try BackupService.stageRestore(from: zip, pending: pending))
+        XCTAssertEqual(try read(pending.appendingPathComponent("SuiviAuto.store")), "précédente")
+    }
+
+    func testLatestSafetyCopy() throws {
+        XCTAssertNil(BackupService.latestSafetyCopy(in: root))
+        for name in ["SuiviAuto-avant-restauration-20260305-100000",
+                     "SuiviAuto-avant-restauration-20260306-090000",
+                     "SuiviAuto-avant-restauration-20260306-090000-2",
+                     "SuiviAuto-PendingRestore-echec-20260307-100000"] {
+            try fm.createDirectory(at: root.appendingPathComponent(name), withIntermediateDirectories: true)
+        }
+        XCTAssertEqual(BackupService.latestSafetyCopy(in: root)?.lastPathComponent,
+                       "SuiviAuto-avant-restauration-20260306-090000-2")
     }
 
     /// Date dans le fuseau local (celui du DateFormatter de BackupService).
@@ -100,11 +152,12 @@ final class BackupServiceTests: XCTestCase {
         let zip = root.appendingPathComponent("absent/sauvegarde.zip")
         XCTAssertThrowsError(try BackupService.exportBackup(to: zip, base: base))
         // destination existante : remplacée par une archive valide
+        try makeRealStore(at: base.appendingPathComponent("SuiviAuto.store"), carName: "Clio")
         let existing = root.appendingPathComponent("existante.zip")
         try Data("ancienne".utf8).write(to: existing)
         try BackupService.exportBackup(to: existing, base: base)
         try BackupService.stageRestore(from: existing, pending: pending)
-        XCTAssertEqual(try read(pending.appendingPathComponent("SuiviAuto.store")), "store-v1")
+        XCTAssertEqual(try carNames(in: pending.appendingPathComponent("SuiviAuto.store")), ["Clio"])
     }
 
     @MainActor

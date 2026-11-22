@@ -1,15 +1,18 @@
 import AppKit
 import CoreData
 import Foundation
+import SwiftData
 
 enum BackupService {
     enum BackupError: LocalizedError, Equatable {
         case dittoFailed(Int32)
         case invalidArchive
+        case unreadableStore
         var errorDescription: String? {
             switch self {
             case .dittoFailed(let code): "La compression a échoué (code \(code))."
             case .invalidArchive: "Cette archive n'est pas une sauvegarde SuiviAuto."
+            case .unreadableStore: "La base de cette sauvegarde est illisible."
             }
         }
     }
@@ -90,11 +93,34 @@ enum BackupService {
         defer { try? fm.removeItem(at: temp) }
         try ditto(["-x", "-k", zipURL.path, temp.path])
         let extracted = temp.appendingPathComponent("SuiviAuto")
-        guard fm.fileExists(atPath: extracted.appendingPathComponent("SuiviAuto.store").path) else {
-            throw BackupError.invalidArchive
-        }
+        let store = extracted.appendingPathComponent("SuiviAuto.store")
+        guard fm.fileExists(atPath: store.path) else { throw BackupError.invalidArchive }
+        try validateStore(at: store)
         if fm.fileExists(atPath: pending.path) { try fm.removeItem(at: pending) }
         try fm.moveItem(at: extracted, to: pending)
+    }
+
+    /// Ouvre une fois la base extraite avec le schéma de l'app. Le conteneur, local à cette fonction,
+    /// est libéré avant que l'appelant ne déplace le dossier.
+    private static func validateStore(at store: URL) throws {
+        do {
+            try autoreleasepool {
+                let container = try ModelContainer(for: Schema(SchemaModels.all),
+                                                   configurations: ModelConfiguration(url: store))
+                _ = try ModelContext(container).fetchCount(FetchDescriptor<Car>())
+            }
+        } catch {
+            throw BackupError.unreadableStore
+        }
+    }
+
+    /// Copie de sécurité « SuiviAuto-avant-restauration-* » la plus récente dans `directory`, s'il y en a une.
+    static func latestSafetyCopy(in directory: URL = AppPaths.baseURL.deletingLastPathComponent()) -> URL? {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        return names
+            .filter { $0.hasPrefix("SuiviAuto-avant-restauration-") }
+            .max { $0.localizedStandardCompare($1) == .orderedAscending }
+            .map { directory.appendingPathComponent($0) }
     }
 
     static func timestamp(_ date: Date) -> String {

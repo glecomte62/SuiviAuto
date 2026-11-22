@@ -58,8 +58,12 @@ struct RulesView: View {
         .sheet(isPresented: $creating) { RuleFormView(car: car, rule: nil).tracksSheetPresentation() }
     }
 
+    /// On ferme d'abord la boîte de dialogue, puis on supprime au tour suivant (comme ContentView.delete).
     private func remove(_ rule: MaintenanceRule) {
-        do { try DeletionService.delete(rule, in: context) }
-        catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
+        ruleToDelete = nil
+        DispatchQueue.main.async {
+            do { try DeletionService.delete(rule, in: context) }
+            catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
+        }
     }
 }

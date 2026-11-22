@@ -42,7 +42,11 @@ struct SuiviAutoApp: App {
         let alert = NSAlert()
         alert.alertStyle = .critical
         alert.messageText = "Impossible d'ouvrir la base de données"
-        alert.informativeText = "\(error.localizedDescription)\n\nEmplacement : \(AppPaths.storeURL.path)"
+        var info = "\(error.localizedDescription)\n\nEmplacement : \(AppPaths.storeURL.path)"
+        if let previous = BackupService.latestSafetyCopy() {
+            info += "\n\nUne copie de vos données précédentes se trouve dans : \(previous.path)"
+        }
+        alert.informativeText = info
         alert.addButton(withTitle: "Quitter")
         alert.runModal()
         exit(1)

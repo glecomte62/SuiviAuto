@@ -51,7 +51,11 @@ struct DeadlinesView: View {
         .confirmationDialog("Marquer « \(oneOffToComplete?.label ?? "") » comme faite ?",
                             isPresented: Binding(get: { oneOffToComplete != nil }, set: { if !$0 { oneOffToComplete = nil } }),
                             presenting: oneOffToComplete) { d in
-            Button("Fait, supprimer l'échéance", role: .destructive) { markDone(d) }
+            Button("Fait, supprimer l'échéance", role: .destructive) {
+                // On ferme d'abord la boîte de dialogue, puis on supprime au tour suivant.
+                oneOffToComplete = nil
+                DispatchQueue.main.async { markDone(d) }
+            }
         } message: { _ in
             Text("Cette échéance ponctuelle sera supprimée.")
         }
