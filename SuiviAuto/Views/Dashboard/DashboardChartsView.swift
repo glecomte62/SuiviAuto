@@ -5,14 +5,14 @@ struct DashboardChartsView: View {
     let cars: [Car]
 
     private struct KmPoint: Identifiable {
-        let id = UUID()
+        let id: String
         let car: String
         let date: Date
         let km: Int
     }
 
     private struct YearCost: Identifiable {
-        let id = UUID()
+        let id: String
         let year: String
         let car: String
         let euros: Double
@@ -40,10 +40,12 @@ struct DashboardChartsView: View {
         let colors = cars.map { Color(hex: $0.colorHex) }
 
         let kmPoints = cars.flatMap { car in
-            CarAnalytics.estimator(for: car).points.map { KmPoint(car: display[car.uuid.uuidString] ?? car.name, date: $0.date, km: $0.km) }
+            CarAnalytics.estimator(for: car).points.enumerated().map { index, p in
+                KmPoint(id: "\(car.uuid.uuidString)-\(index)", car: display[car.uuid.uuidString] ?? car.name, date: p.date, km: p.km)
+            }
         }
         let costs = CostSummary.byCarAndYear(entries)
-            .map { YearCost(year: String($0.key.year), car: display[$0.key.carID] ?? $0.key.carName, euros: Double($0.value) / 100) }
+            .map { YearCost(id: "\($0.key.year)-\($0.key.carID)", year: String($0.key.year), car: display[$0.key.carID] ?? $0.key.carName, euros: Double($0.value) / 100) }
             .sorted { $0.year < $1.year }
 
         ScrollView {

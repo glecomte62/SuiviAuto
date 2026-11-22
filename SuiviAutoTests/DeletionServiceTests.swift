@@ -74,4 +74,23 @@ final class DeletionServiceTests: XCTestCase {
         XCTAssertFalse(ctx.hasChanges)
         XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<Car>()), 1)
     }
+
+    func testDeleteRuleUnlinksInterventions() throws {
+        let car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
+        ctx.insert(car)
+        let rule = MaintenanceRule(key: "vidange", label: "Vidange", intervalKm: 15_000, intervalMonths: 12)
+        ctx.insert(rule); rule.car = car
+        let linked = Intervention(date: T.date("2026-01-01"), mileage: 1, kind: .entretien)
+        ctx.insert(linked); linked.car = car; linked.ruleKey = "vidange"
+        let other = Intervention(date: T.date("2026-02-01"), mileage: 2, kind: .entretien)
+        ctx.insert(other); other.car = car; other.ruleKey = "courroie"
+        try ctx.save()
+
+        XCTAssertEqual(DeletionService.linkedInterventions(of: rule).count, 1)
+        try DeletionService.delete(rule, in: ctx)
+        XCTAssertNil(linked.ruleKey)
+        XCTAssertEqual(other.ruleKey, "courroie")
+        XCTAssertEqual(car.rules.count, 0)
+        XCTAssertFalse(ctx.hasChanges)
+    }
 }

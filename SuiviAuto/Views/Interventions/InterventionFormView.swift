@@ -89,6 +89,8 @@ struct InterventionFormView: View {
         date = i.date; mileageText = String(i.mileage); kind = i.kind; title = i.title; garage = i.garage
         amountText = i.amountCents.map(Money.editString(cents:)) ?? ""
         status = i.status; notes = i.notes; ctResult = i.ctResult ?? .favorable; ruleKey = i.ruleKey ?? ""
+        // Règle supprimée entre-temps : on évite une sélection invalide dans le Picker.
+        if !car.rules.contains(where: { $0.key == ruleKey }) { ruleKey = "" }
     }
 
     private func attemptSave() {

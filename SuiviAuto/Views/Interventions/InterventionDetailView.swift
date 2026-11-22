@@ -141,11 +141,13 @@ struct InterventionDetailView: View {
                                     gridFocused = true
                                 }
                                 .contextMenu {
-                                    Button("Coup d'œil") { preview(doc) }
-                                    Button("Ouvrir") { open(doc) }
+                                    let missing = !DocumentStore.shared.fileExists(for: doc)
+                                    Button("Coup d'œil") { preview(doc) }.disabled(missing)
+                                    Button("Ouvrir") { open(doc) }.disabled(missing)
                                     Button("Afficher dans le Finder") {
                                         NSWorkspace.shared.activateFileViewerSelecting([DocumentStore.shared.url(for: doc)])
                                     }
+                                    .disabled(missing)
                                     Divider()
                                     Button("Supprimer", role: .destructive) { deleteDocument(doc) }
                                 }

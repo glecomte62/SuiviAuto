@@ -7,6 +7,9 @@ struct DeadlinesView: View {
     @Environment(AppState.self) private var appState
     @State private var editing: Deadline?
     @State private var creating = false
+    /// Échéances dont le bouton « Fait » vient d'être cliqué (désactivé 1 s contre le double-clic).
+    @State private var justDone: Set<UUID> = []
+    @State private var oneOffToComplete: Deadline?
 
     var body: some View {
         List {
@@ -21,8 +24,11 @@ struct DeadlinesView: View {
                     }
                     Spacer()
                     StatusBadge(status: status)
-                    Button(d.repeatsYearly ? "Fait ✓ (+1 an)" : "Fait ✓") { markDone(d) }
-                        .buttonStyle(.bordered)
+                    Button(d.repeatsYearly ? "Fait ✓ (+1 an)" : "Fait ✓") {
+                        if d.repeatsYearly { markDone(d) } else { oneOffToComplete = d }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(justDone.contains(d.uuid))
                 }
                 .padding(.vertical, 4)
                 .contentShape(Rectangle())
@@ -42,12 +48,26 @@ struct DeadlinesView: View {
         .toolbar {
             Button { creating = true } label: { Label("Nouvelle échéance", systemImage: "plus") }
         }
+        .confirmationDialog("Marquer « \(oneOffToComplete?.label ?? "") » comme faite ?",
+                            isPresented: Binding(get: { oneOffToComplete != nil }, set: { if !$0 { oneOffToComplete = nil } }),
+                            presenting: oneOffToComplete) { d in
+            Button("Fait, supprimer l'échéance", role: .destructive) { markDone(d) }
+        } message: { _ in
+            Text("Cette échéance ponctuelle sera supprimée.")
+        }
         .sheet(item: $editing) { DeadlineFormView(car: car, deadline: $0).tracksSheetPresentation() }
         .sheet(isPresented: $creating) { DeadlineFormView(car: car, deadline: nil).tracksSheetPresentation() }
     }
 
     /// Annuelle : avance d'un an. Ponctuelle : supprimée.
     private func markDone(_ d: Deadline) {
+        let id = d.uuid
+        guard !justDone.contains(id) else { return }
+        justDone.insert(id)
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            justDone.remove(id)
+        }
         if !d.markDone() { context.delete(d) }
         do { try DeletionService.saveOrRollback(context) }
         catch { appState.errorMessage = "Enregistrement impossible : \(error.localizedDescription)" }

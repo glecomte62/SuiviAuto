@@ -22,7 +22,7 @@ struct MileageView: View {
                         Spacer()
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("Moyenne").font(.caption).foregroundStyle(.secondary)
-                            Text(estimator.kmPerDay.map { "\(Fmt.km(Int(($0 * 365).rounded()))) / an" } ?? "—")
+                            Text(estimator.kmPerDay.flatMap { $0 > 0 ? "\(Fmt.km(Int(($0 * 365).rounded()))) / an" : nil } ?? "—")
                                 .font(.title3.bold()).monospacedDigit()
                         }
                     }
@@ -61,8 +61,9 @@ struct MileageView: View {
                                 Text(Fmt.km(r.mileage)).monospacedDigit()
                                 Button(role: .destructive) {
                                     remove(r)
-                                } label: { Image(systemName: "trash") }
+                                } label: { Label("Supprimer le relevé", systemImage: "trash").labelStyle(.iconOnly) }
                                 .buttonStyle(.borderless)
+                                .help("Supprimer le relevé")
                             }
                             Divider()
                         }

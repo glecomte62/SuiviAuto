@@ -23,6 +23,7 @@ struct InterventionRow: View {
                 HStack(spacing: 4) {
                     if !intervention.documents.isEmpty {
                         Image(systemName: "paperclip").font(.caption2).foregroundStyle(.secondary)
+                            .accessibilityLabel("Documents joints")
                     }
                     StatusPill(text: intervention.status.label, color: intervention.status == .devis ? .purple : .blue)
                 }

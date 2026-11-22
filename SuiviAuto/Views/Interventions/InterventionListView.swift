@@ -7,12 +7,14 @@ struct InterventionListView: View {
     @State private var search = ""
     @State private var kindFilter: InterventionKind?
 
-    private var filtered: [Intervention] {
+    private func filteredInterventions() -> [Intervention] {
         car.interventions
             .filter { i in
                 (kindFilter == nil || i.kind == kindFilter)
                 && (search.isEmpty
                     || i.title.localizedCaseInsensitiveContains(search)
+                    || i.displayTitle.localizedCaseInsensitiveContains(search)
+                    || i.kind.label.localizedCaseInsensitiveContains(search)
                     || i.garage.localizedCaseInsensitiveContains(search)
                     || i.notes.localizedCaseInsensitiveContains(search))
             }
@@ -20,6 +22,7 @@ struct InterventionListView: View {
     }
 
     var body: some View {
+        let filtered = filteredInterventions()
         List(selection: $selection) {
             ForEach(filtered) { i in
                 InterventionRow(intervention: i).tag(i)
@@ -31,7 +34,11 @@ struct InterventionListView: View {
                 ContentUnavailableView("Aucune intervention", systemImage: "wrench.and.screwdriver",
                                        description: Text("Ajoutez la première avec ⌘N."))
             } else if filtered.isEmpty {
-                ContentUnavailableView.search(text: search)
+                if search.isEmpty {
+                    ContentUnavailableView("Aucune intervention de ce type", systemImage: "line.3.horizontal.decrease.circle")
+                } else {
+                    ContentUnavailableView.search(text: search)
+                }
             }
         }
         .toolbar {

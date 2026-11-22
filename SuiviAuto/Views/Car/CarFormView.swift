@@ -133,7 +133,7 @@ struct CarFormView: View {
 
     private func save() {
         if usedPurchase && !PurchaseValidation.isDateValid(purchase: purchaseDate, firstRegistration: firstRegistrationDate) {
-            errorMessage = "La date d'achat doit être postérieure à la 1re immatriculation."
+            errorMessage = "La date d'achat doit être le jour de la 1re immatriculation ou après."
             return
         }
         let target: Car

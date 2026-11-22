@@ -32,6 +32,18 @@ enum DeletionService {
         try saveOrRollback(context)
     }
 
+    /// Interventions de la même voiture rattachées à cette règle.
+    static func linkedInterventions(of rule: MaintenanceRule) -> [Intervention] {
+        (rule.car?.interventions ?? []).filter { $0.ruleKey == rule.key }
+    }
+
+    /// Détache les interventions liées puis supprime la règle, en un seul enregistrement.
+    static func delete(_ rule: MaintenanceRule, in context: ModelContext) throws {
+        linkedInterventions(of: rule).forEach { $0.ruleKey = nil }
+        context.delete(rule)
+        try saveOrRollback(context)
+    }
+
     static func delete(_ document: StoredDocument, in context: ModelContext, store: DocumentStore = .shared) throws {
         let name = document.fileName
         context.delete(document)

@@ -7,6 +7,7 @@ struct RulesView: View {
     @Environment(AppState.self) private var appState
     @State private var editingRule: MaintenanceRule?
     @State private var creating = false
+    @State private var ruleToDelete: MaintenanceRule?
 
     var body: some View {
         let estimator = CarAnalytics.estimator(for: car)
@@ -28,7 +29,7 @@ struct RulesView: View {
                 .onTapGesture(count: 2) { editingRule = rule }
                 .contextMenu {
                     Button("Modifier") { editingRule = rule }
-                    Button("Supprimer", role: .destructive) { remove(rule) }
+                    Button("Supprimer", role: .destructive) { ruleToDelete = rule }
                 }
             }
         }
@@ -45,12 +46,20 @@ struct RulesView: View {
         .toolbar {
             Button { creating = true } label: { Label("Nouvelle règle", systemImage: "plus") }
         }
+        .confirmationDialog("Supprimer la règle « \(ruleToDelete?.label ?? "") » ?",
+                            isPresented: Binding(get: { ruleToDelete != nil }, set: { if !$0 { ruleToDelete = nil } }),
+                            presenting: ruleToDelete) { rule in
+            Button("Supprimer", role: .destructive) { remove(rule) }
+        } message: { rule in
+            let n = DeletionService.linkedInterventions(of: rule).count
+            Text(n == 0 ? "Aucune intervention n'y est rattachée." : "\(n) intervention(s) liée(s) ne seront plus rattachées.")
+        }
         .sheet(item: $editingRule) { RuleFormView(car: car, rule: $0).tracksSheetPresentation() }
         .sheet(isPresented: $creating) { RuleFormView(car: car, rule: nil).tracksSheetPresentation() }
     }
 
     private func remove(_ rule: MaintenanceRule) {
-        do { try DeletionService.deleteRecord(rule, in: context) }
+        do { try DeletionService.delete(rule, in: context) }
         catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
     }
 }
