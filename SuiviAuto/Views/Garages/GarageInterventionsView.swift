@@ -27,7 +27,9 @@ struct GarageInterventionsView: View {
                                 if let car = i.car { CarAvatar(car: car, size: 26) }
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(i.displayTitle).fontWeight(.medium)
-                                    Text("\(i.car?.name ?? "") · \(Fmt.shortDate(i.date)) · \(Fmt.km(i.mileage))")
+                                    Text([i.car?.name ?? "", Fmt.shortDate(i.date), Fmt.km(i.mileage)]
+                                            .filter { !$0.isEmpty }
+                                            .joined(separator: " · "))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()

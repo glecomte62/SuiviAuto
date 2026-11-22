@@ -29,6 +29,8 @@ struct InterventionFormView: View {
     @State private var ruleKey = ""
     @State private var showLowMileageWarning = false
     @State private var errorMessage: String?
+    /// `onAppear` se redéclenche à la fermeture d'une feuille imbriquée : ne charger qu'une fois.
+    @State private var loaded = false
 
     /// Texte brut converti à la volée (voir `NumberInput`).
     private var mileage: Int? { NumberInput.parseInt(mileageText) }
@@ -60,7 +62,7 @@ struct InterventionFormView: View {
                                !Garage.cleanedName(legacy).isEmpty {
                                 Text("\(Garage.cleanedName(legacy)) (texte)").tag(GarageChoice.legacyText)
                             }
-                            Divider()
+                            if !garages.isEmpty { Divider() }
                             ForEach(GarageService.sorted(garages)) { Text($0.name).tag(GarageChoice.garage($0)) }
                         }
                         Button("Nouveau garage…") { creatingGarage = true }
@@ -103,12 +105,17 @@ struct InterventionFormView: View {
             Button("OK", role: .cancel) {}
         } message: { Text(errorMessage ?? "") }
         .sheet(isPresented: $creatingGarage) {
-            GarageFormView(garage: nil) { newGarage in garageChoice = .garage(newGarage) }
+            GarageFormView(garage: nil) { newGarage in
+                // Après la mise à jour de @Query, pour que le Picker connaisse déjà ce garage.
+                DispatchQueue.main.async { garageChoice = .garage(newGarage) }
+            }
                 .tracksSheetPresentation()
         }
     }
 
     private func load() {
+        guard !loaded else { return }
+        loaded = true
         guard let i = intervention else { return }
         date = i.date; mileageText = String(i.mileage); kind = i.kind; title = i.title
         if let linked = i.garageRef {
@@ -157,6 +164,7 @@ struct InterventionFormView: View {
             break // texte conservé tel quel
         case .garage(let chosen):
             target.garageRef = chosen
+            target.garage = "" // le texte n'est gardé que tant qu'aucun garage n'est choisi
             target.garageTextMigrated = true
         }
         target.amountCents = Money.parse(amountText)

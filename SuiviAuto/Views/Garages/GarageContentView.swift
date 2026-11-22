@@ -70,6 +70,8 @@ struct GarageContentView: View {
                         .shadow(color: .orange.opacity(0.5), radius: 5, y: 3))
                 VStack(alignment: .leading, spacing: 6) {
                     Text(garage.name).font(.title2.bold())
+                    // Enregistrée immédiatement. Attention : en cas d'échec, `saveOrRollback` annule aussi
+                    // toute autre modification non enregistrée du contexte (aucune ici : les formulaires enregistrent eux-mêmes).
                     StarRating(rating: Binding(get: { garage.rating }, set: { garage.rating = $0; save() }), size: 18)
                 }
                 Spacer()
@@ -123,7 +125,9 @@ struct GarageContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 ForEach(garage.contacts.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }) { contact in
-                    ContactRow(contact: contact)
+                    ContactRow(contact: contact,
+                               onEdit: { editingContact = contact },
+                               onDelete: { contactToDelete = contact })
                         .onTapGesture(count: 2) { editingContact = contact }
                         .contextMenu {
                             Button("Modifier") { editingContact = contact }
@@ -136,7 +140,7 @@ struct GarageContentView: View {
                     Divider()
                 }
                 if !garage.contacts.isEmpty {
-                    Text("Double-clic pour modifier · clic droit pour copier ou supprimer")
+                    Text("Double-clic ou « … » pour modifier · clic droit pour copier ou supprimer")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -160,7 +164,7 @@ struct InfoActionRow: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: symbol).foregroundStyle(.secondary).frame(width: 20)
                 .accessibilityHidden(true)
-            Text(text).textSelection(.enabled)
+            Text(text)
             Spacer()
             if let url {
                 Button(actionLabel) { NSWorkspace.shared.open(url) }
@@ -174,6 +178,8 @@ struct InfoActionRow: View {
 
 struct ContactRow: View {
     let contact: GarageContact
+    let onEdit: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -193,7 +199,6 @@ struct ContactRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .textSelection(.enabled)
                 if !contact.notes.isEmpty {
                     Text(contact.notes).font(.caption).italic()
                 }
@@ -215,8 +220,22 @@ struct ContactRow: View {
             }
             .buttonStyle(.borderless)
             .foregroundStyle(.teal)
+            Menu {
+                Button("Modifier", action: onEdit)
+                Button("Supprimer", role: .destructive, action: onDelete)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Modifier ou supprimer le contact")
+            .accessibilityLabel("Actions pour \(contact.name)")
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
+        .accessibilityAction(named: "Modifier", onEdit)
+        .accessibilityAction(named: "Supprimer", onDelete)
     }
 }
