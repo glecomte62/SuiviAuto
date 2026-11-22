@@ -12,6 +12,9 @@ struct InterventionRow: View {
                 .background(Circle().fill(intervention.kind.color.gradient).shadow(color: intervention.kind.color.opacity(0.4), radius: 2, y: 1))
             VStack(alignment: .leading, spacing: 2) {
                 Text(intervention.displayTitle).fontWeight(.medium).lineLimit(1)
+                if !intervention.operationsSummary.isEmpty {
+                    Text(intervention.operationsSummary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
                 Text("\(Fmt.shortDate(intervention.date)) · \(Fmt.km(intervention.mileage))")
                     .font(.caption).foregroundStyle(.secondary)
             }

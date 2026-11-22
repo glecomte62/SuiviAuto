@@ -16,6 +16,7 @@ struct InterventionListView: View {
                     || i.displayTitle.localizedCaseInsensitiveContains(search)
                     || i.kind.label.localizedCaseInsensitiveContains(search)
                     || i.garageDisplayName.localizedCaseInsensitiveContains(search)
+                    || i.operationsSummary.localizedCaseInsensitiveContains(search)
                     || i.notes.localizedCaseInsensitiveContains(search))
             }
             .sorted { ($0.date, $0.mileage) > ($1.date, $1.mileage) }
@@ -28,7 +29,7 @@ struct InterventionListView: View {
                 InterventionRow(intervention: i).tag(i)
             }
         }
-        .searchable(text: $search, prompt: "Titre, garage, notes…")
+        .searchable(text: $search, prompt: "Titre, opérations, garage, notes…")
         .overlay {
             if car.interventions.isEmpty {
                 ContentUnavailableView("Aucune intervention", systemImage: "wrench.and.screwdriver",

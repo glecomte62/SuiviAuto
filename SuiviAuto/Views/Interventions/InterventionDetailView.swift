@@ -99,6 +99,7 @@ struct InterventionDetailView: View {
                 infoRow("Date", Fmt.date(intervention.date))
                 infoRow("Kilométrage", Fmt.km(intervention.mileage))
                 if !intervention.garageDisplayName.isEmpty { infoRow("Garage", intervention.garageDisplayName) }
+                if !intervention.operationsSummary.isEmpty { infoRow("Opérations", intervention.operationsSummary) }
                 if let r = intervention.ctResult { infoRow("Résultat CT", r.label) }
                 if let key = intervention.ruleKey,
                    let rule = intervention.car?.rules.first(where: { $0.key == key }) {

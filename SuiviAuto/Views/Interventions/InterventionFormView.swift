@@ -11,6 +11,8 @@ enum GarageChoice: Hashable {
 struct InterventionFormView: View {
     let car: Car
     let intervention: Intervention?
+    /// Pré-saisie depuis « Fait ✓… » d'une échéance (création uniquement).
+    var prefillDeadline: Deadline? = nil
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -28,6 +30,15 @@ struct InterventionFormView: View {
     @State private var ctResult: CTResult = .favorable
     @State private var ruleKey = ""
     @State private var showLowMileageWarning = false
+    @State private var operations: Set<MaintenanceOperation> = []
+    @State private var customOperation = ""
+    /// Échéance à solder à CET enregistrement (jamais mémorisée : un nouvel enregistrement ne la solde pas deux fois).
+    @State private var completingDeadline: Deadline?
+    @State private var pending = PendingAttachments()
+    @State private var showingDetected = false
+    @State private var extraction: InvoiceExtraction?
+    @State private var analysisID = UUID()
+    @State private var saved = false
     @State private var errorMessage: String?
     /// `onAppear` se redéclenche à la fermeture d'une feuille imbriquée : ne charger qu'une fois.
     @State private var loaded = false
@@ -39,10 +50,16 @@ struct InterventionFormView: View {
         CarAnalytics.lastKnownMileage(for: car, onOrBefore: date, excluding: intervention)
     }
 
+    private var ruleKeys: Set<String> { Set(car.rules.map(\.key)) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(intervention == nil ? "Nouvelle intervention" : "Modifier l'intervention")
                 .font(.title2.bold()).padding([.top, .horizontal])
+            if showingDetected {
+                DetectedValuesBanner(extraction: extraction, onApply: applyExtraction, onDismiss: dismissExtraction)
+                    .padding([.top, .horizontal])
+            }
             Form {
                 Section {
                     Picker("Type", selection: $kind) {
@@ -69,6 +86,16 @@ struct InterventionFormView: View {
                     }
                     TextField("Montant (€)", text: $amountText, prompt: Text("ex. 189,90"))
                 }
+                Section("Opérations") {
+                    LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
+                              alignment: .leading, spacing: 6) {
+                        ForEach(MaintenanceOperation.allCases.filter { $0 != .autre }) { op in
+                            Toggle(isOn: operationBinding(op)) { Label(op.label, systemImage: op.symbol) }
+                                .toggleStyle(.checkbox)
+                        }
+                    }
+                    TextField("Autre opération", text: $customOperation, prompt: Text("ex. Essuie-glaces"))
+                }
                 Section {
                     if kind == .controleTechnique {
                         Picker("Résultat du CT", selection: $ctResult) {
@@ -80,21 +107,43 @@ struct InterventionFormView: View {
                         ForEach(car.rules.sorted { $0.label < $1.label }) { Text($0.label).tag($0.key) }
                     }
                     .help("Relie cette intervention à une règle pour recalculer la prochaine échéance")
+                    Picker("Solde l'échéance", selection: $completingDeadline) {
+                        Text("Aucune").tag(Deadline?.none)
+                        let deadlines = car.deadlines.sorted { $0.label.localizedStandardCompare($1.label) == .orderedAscending }
+                        if !deadlines.isEmpty { Divider() }
+                        ForEach(deadlines) { d in
+                            Text("\(d.label) (\(DeadlineText.target(mode: d.mode, dueDate: d.dueDate, targetMileage: d.targetMileage)))")
+                                .tag(Optional(d))
+                        }
+                    }
+                    .help("À l'enregistrement, l'échéance est validée et ses documents rejoignent cette intervention")
+                    .disabled(status == .devis)
+                    if status == .devis && completingDeadline != nil {
+                        Text("Un devis ne solde pas l'échéance : passez le statut à « Facture ».")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
                     TextField("Notes", text: $notes, axis: .vertical).lineLimit(3...6)
                 }
+                AttachmentsSection(pending: pending, onAnalyze: analyze)
             }
             .formStyle(.grouped)
             HStack {
                 Spacer()
-                Button("Annuler", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Annuler", role: .cancel) {
+                    pending.discard()
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
                 Button("Enregistrer") { attemptSave() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(mileage == nil)
             }
             .padding()
         }
-        .frame(width: 500)
+        .frame(width: 560)
         .onAppear(perform: load)
+        // Ignoré quand c'est la feuille « Nouveau garage » qui masque ce formulaire.
+        .onDisappear { if !saved && !creatingGarage { pending.discard() } }
         .confirmationDialog("Kilométrage inférieur au dernier connu", isPresented: $showLowMileageWarning) {
             Button("Enregistrer quand même") { save() }
             Button("Corriger", role: .cancel) {}
@@ -116,7 +165,14 @@ struct InterventionFormView: View {
     private func load() {
         guard !loaded else { return }
         loaded = true
-        guard let i = intervention else { return }
+        guard let i = intervention else {
+            if let d = prefillDeadline {
+                title = d.label
+                for op in MaintenanceOperation.detect(in: d.label) { setOperation(op, checked: true) }
+                completingDeadline = d
+            }
+            return
+        }
         date = i.date; mileageText = String(i.mileage); kind = i.kind; title = i.title
         if let linked = i.garageRef {
             garageChoice = .garage(linked)
@@ -125,6 +181,7 @@ struct InterventionFormView: View {
         }
         amountText = i.amountCents.map(Money.editString(cents:)) ?? ""
         status = i.status; notes = i.notes; ctResult = i.ctResult ?? .favorable; ruleKey = i.ruleKey ?? ""
+        operations = Set(i.operations); customOperation = i.customOperation
         // Règle supprimée entre-temps : on évite une sélection invalide dans le Picker.
         if !car.rules.contains(where: { $0.key == ruleKey }) { ruleKey = "" }
     }
@@ -172,11 +229,71 @@ struct InterventionFormView: View {
         target.notes = notes
         target.ctResult = kind == .controleTechnique ? ctResult : nil
         target.ruleKey = ruleKey.isEmpty ? nil : ruleKey
+        target.operations = InterventionDraft.storedOperations(operations, custom: customOperation)
+        target.customOperation = customOperation.trimmingCharacters(in: .whitespacesAndNewlines)
+        let attached = pending.attach(to: target, in: context)
         do {
-            try DeletionService.saveOrRollback(context)
+            if let deadline = completingDeadline, status == .facture {
+                try DeadlineService.complete(deadline, with: target, in: context)
+            } else {
+                try DeletionService.saveOrRollback(context)
+            }
+            completingDeadline = nil
+            saved = true
             dismiss()
         } catch {
+            // `complete` peut échouer avant d'enregistrer : on annule aussi dans ce cas (sans effet si déjà fait).
+            context.rollback()
+            // Les documents insérés ont disparu avec le rollback : leurs fichiers ne doivent pas rester orphelins.
+            pending.deleteFiles(named: attached)
             errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
+    }
+
+    // MARK: - Opérations
+
+    private func operationBinding(_ op: MaintenanceOperation) -> Binding<Bool> {
+        Binding(get: { operations.contains(op) }, set: { setOperation(op, checked: $0) })
+    }
+
+    private func setOperation(_ op: MaintenanceOperation, checked: Bool) {
+        if checked {
+            operations.insert(op)
+            ruleKey = InterventionDraft.ruleKey(afterChecking: op, current: ruleKey, available: ruleKeys)
+        } else {
+            operations.remove(op)
+        }
+    }
+
+    // MARK: - Lecture automatique
+
+    private func analyze(_ url: URL) {
+        let id = UUID()
+        analysisID = id
+        extraction = nil
+        showingDetected = true
+        Task {
+            let result = (try? await InvoiceOCRService.analyze(fileAt: url)) ?? InvoiceExtraction()
+            // Une analyse plus récente (ou « Ignorer ») a pris le relais.
+            guard analysisID == id, showingDetected else { return }
+            extraction = result
+        }
+    }
+
+    private func applyExtraction() {
+        guard let extraction else { return }
+        let fields = InterventionDraft.apply(
+            extraction,
+            to: .init(date: date, mileageText: mileageText, amountText: amountText, operations: operations, ruleKey: ruleKey),
+            availableRuleKeys: ruleKeys)
+        date = fields.date; mileageText = fields.mileageText; amountText = fields.amountText
+        operations = fields.operations; ruleKey = fields.ruleKey
+        dismissExtraction()
+    }
+
+    private func dismissExtraction() {
+        analysisID = UUID()
+        showingDetected = false
+        extraction = nil
     }
 }
