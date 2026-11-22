@@ -17,6 +17,7 @@ Usage mono-utilisateur, données 100 % locales, aucun serveur.
 - **UI** : SwiftUI, `NavigationSplitView` 3 colonnes, Swift Charts pour les graphiques.
 - **Persistance** : SwiftData.
 - **Projet** : généré par XcodeGen depuis `project.yml` ; compilation et tests via `xcodebuild` en ligne de commande.
+- **Emplacement du code** : `~/Library/Mobile Documents/com~apple~CloudDocs/Documents/XCODE/SUIVIAUTO` (iCloud Drive). Les produits de compilation (DerivedData) restent hors iCloud, dans `~/Library/Developer/Xcode/DerivedData`. Les données de l'app restent dans `~/Library/Application Support/SuiviAuto/`.
 - **Tests** : XCTest sur la couche `Logic/`.
 - **Langue de l'interface** : français. Formats de date, de montant (€) et de km au format `fr_FR`.
 
@@ -165,7 +166,7 @@ Onglets de la fiche voiture (accessibles depuis la colonne liste) : Intervention
 ## 8. Arborescence du projet
 
 ```
-~/SuiviAuto/
+iCloud Drive/Documents/XCODE/SUIVIAUTO/
   project.yml
   SuiviAuto/
     SuiviAutoApp.swift
