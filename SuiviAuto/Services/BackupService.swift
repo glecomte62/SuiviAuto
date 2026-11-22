@@ -138,6 +138,18 @@ enum BackupService {
         }
     }
 
+    /// Après un échec de restauration : met le dossier en attente de côté (sans le supprimer)
+    /// pour que le prochain lancement ne réessaie pas. Renvoie son nouvel emplacement.
+    @discardableResult
+    static func quarantinePendingRestore(pending: URL = AppPaths.pendingRestoreURL, now: Date = .now) -> URL? {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: pending.path) else { return nil }
+        let url = freeURL(in: pending.deletingLastPathComponent(),
+                          prefix: "\(pending.lastPathComponent)-echec-\(timestamp(now))")
+        do { try fm.moveItem(at: pending, to: url) } catch { return nil }
+        return url
+    }
+
     /// Relance l'application : un shell détaché attend la fin du processus actuel puis rouvre l'app.
     @MainActor
     static func relaunch() {

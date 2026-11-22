@@ -136,6 +136,18 @@ final class BackupServiceTests: XCTestCase {
         _ = container
     }
 
+    func testQuarantinePendingRestore() throws {
+        try makePending("cassée")
+        let moved = try XCTUnwrap(BackupService.quarantinePendingRestore(pending: pending, now: localDate(2026, 3, 5, 10, 0, 0)))
+        XCTAssertEqual(moved.lastPathComponent, "SuiviAuto-PendingRestore-echec-20260305-100000")
+        XCTAssertFalse(fm.fileExists(atPath: pending.path))
+        XCTAssertEqual(try read(moved.appendingPathComponent("SuiviAuto.store")), "cassée")
+    }
+
+    func testQuarantineWithoutPendingReturnsNil() {
+        XCTAssertNil(BackupService.quarantinePendingRestore(pending: pending))
+    }
+
     func testApplyWithoutPendingDoesNothing() throws {
         try BackupService.applyPendingRestoreIfNeeded(base: base, pending: pending)
         XCTAssertEqual(try read(base.appendingPathComponent("SuiviAuto.store")), "store-v1")

@@ -1,29 +1,51 @@
+import AppKit
 import SwiftData
 import SwiftUI
 
 @main
 struct SuiviAutoApp: App {
     let container: ModelContainer
-    @State private var appState = AppState()
+    @State private var appState: AppState
 
     static var isRunningTests: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
     init() {
+        var launchMessage: String?
+        if !Self.isRunningTests {
+            do {
+                try BackupService.applyPendingRestoreIfNeeded()
+            } catch {
+                let moved = BackupService.quarantinePendingRestore()
+                launchMessage = "La restauration de la sauvegarde a échoué : \(error.localizedDescription)"
+                    + (moved.map { " La sauvegarde décompressée a été mise de côté dans « \($0.lastPathComponent) »." } ?? "")
+            }
+        }
         do {
             if Self.isRunningTests {
                 container = try ModelContainer(for: Schema(SchemaModels.all),
                                                configurations: ModelConfiguration(isStoredInMemoryOnly: true))
             } else {
-                try BackupService.applyPendingRestoreIfNeeded()
                 try AppPaths.ensureDirectories()
                 container = try ModelContainer(for: Schema(SchemaModels.all),
                                                configurations: ModelConfiguration(url: AppPaths.storeURL))
             }
         } catch {
-            fatalError("Impossible d'ouvrir la base de données : \(error)")
+            Self.failToOpenDatabase(error)
         }
+        _appState = State(initialValue: AppState(errorMessage: launchMessage))
+    }
+
+    /// Alerte bloquante puis sortie propre (au lieu d'un plantage).
+    private static func failToOpenDatabase(_ error: Error) -> Never {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "Impossible d'ouvrir la base de données"
+        alert.informativeText = "\(error.localizedDescription)\n\nEmplacement : \(AppPaths.storeURL.path)"
+        alert.addButton(withTitle: "Quitter")
+        alert.runModal()
+        exit(1)
     }
 
     var body: some Scene {

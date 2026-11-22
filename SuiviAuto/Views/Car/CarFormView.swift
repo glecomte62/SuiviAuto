@@ -130,6 +130,8 @@ struct CarFormView: View {
             if car == nil { onCreated?(target) }
             dismiss()
         } catch {
+            // Annule l'insertion (voiture + règles) ou les modifications : rien de partiellement créé ne reste.
+            context.rollback()
             errorMessage = error.localizedDescription
         }
     }

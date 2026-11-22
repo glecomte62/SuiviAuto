@@ -6,4 +6,8 @@ final class AppState {
     var showingNewIntervention = false
     var showingNewReading = false
     var errorMessage: String?
+
+    init(errorMessage: String? = nil) {
+        self.errorMessage = errorMessage
+    }
 }
