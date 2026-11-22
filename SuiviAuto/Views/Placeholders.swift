@@ -1,8 +1,5 @@
 import SwiftUI
 
-struct InterventionListView: View { let car: Car; @Binding var selection: Intervention?; var body: some View { Text("Interventions") } }
-struct InterventionDetailView: View { let intervention: Intervention; let onDelete: () -> Void; var body: some View { Text(intervention.displayTitle) } }
-struct InterventionFormView: View { let car: Car; let intervention: Intervention?; var body: some View { Text("Formulaire") } }
 struct ReadingFormView: View { let car: Car; var body: some View { Text("Relevé") } }
 struct MileageView: View { let car: Car; var body: some View { Text("Km") } }
 struct RulesView: View { let car: Car; var body: some View { Text("Règles") } }
