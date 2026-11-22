@@ -1,6 +1,7 @@
 import Foundation
 
 struct CostEntry: Equatable {
+    let carID: String
     let carName: String
     let date: Date
     let kind: InterventionKind
@@ -8,9 +9,20 @@ struct CostEntry: Equatable {
     let status: InterventionStatus
 }
 
+/// Clé (année, voiture). L'identité repose sur `year` + `carID` ; `carName` sert uniquement à l'affichage.
 struct YearCar: Hashable {
     let year: Int
+    let carID: String
     let carName: String
+
+    static func == (lhs: YearCar, rhs: YearCar) -> Bool {
+        lhs.year == rhs.year && lhs.carID == rhs.carID
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(year)
+        hasher.combine(carID)
+    }
 }
 
 /// Totaux en centimes. Les devis sont toujours exclus.
@@ -25,7 +37,7 @@ enum CostSummary {
     }
 
     static func byCarAndYear(_ entries: [CostEntry], calendar: Calendar = .current) -> [YearCar: Int] {
-        totals(entries) { YearCar(year: calendar.component(.year, from: $0.date), carName: $0.carName) }
+        totals(entries) { YearCar(year: calendar.component(.year, from: $0.date), carID: $0.carID, carName: $0.carName) }
     }
 
     static func byKind(_ entries: [CostEntry], year: Int, calendar: Calendar = .current) -> [InterventionKind: Int] {

@@ -24,7 +24,7 @@ enum CarAnalytics {
         cars.flatMap { car in
             car.interventions.compactMap { i -> CostEntry? in
                 guard let cents = i.amountCents else { return nil }
-                return CostEntry(carName: car.name, date: i.date, kind: i.kind, amountCents: cents, status: i.status)
+                return CostEntry(carID: car.uuid.uuidString, carName: car.name, date: i.date, kind: i.kind, amountCents: cents, status: i.status)
             }
         }
         .sorted { $0.date < $1.date }
