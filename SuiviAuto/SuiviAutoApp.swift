@@ -53,7 +53,15 @@ struct SuiviAutoApp: App {
                 launchMessage = [launchMessage, message].compactMap { $0 }.joined(separator: "\n\n")
             }
         }
+        if !Self.isRunningTests { Self.removeOrphanDocuments(in: container.mainContext) }
         _appState = State(initialValue: AppState(errorMessage: launchMessage))
+    }
+
+    /// Fichiers joints sans document correspondant (plantage, fermeture forcée). Silencieux et non bloquant :
+    /// si la liste des documents ne peut pas être lue, rien n'est supprimé.
+    private static func removeOrphanDocuments(in context: ModelContext) {
+        guard let documents = try? context.fetch(FetchDescriptor<StoredDocument>()) else { return }
+        _ = try? DocumentStore.shared.removeOrphans(referenced: Set(documents.map(\.fileName)))
     }
 
     /// Alerte bloquante puis sortie propre (au lieu d'un plantage).

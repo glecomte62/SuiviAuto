@@ -43,4 +43,26 @@ struct DocumentStore {
     func delete(fileName: String) {
         try? FileManager.default.removeItem(at: directory.appendingPathComponent(fileName))
     }
+
+    /// Supprime les fichiers du dossier qu'aucun `StoredDocument` ne référence (copies laissées par un plantage
+    /// ou une fermeture forcée pendant un formulaire). Les fichiers de moins de `olderThan` secondes sont gardés :
+    /// ils peuvent appartenir à un formulaire encore ouvert. Renvoie les noms supprimés.
+    @discardableResult
+    func removeOrphans(referenced: Set<String>, olderThan age: TimeInterval = 3600, now: Date = .now) throws -> [String] {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: directory.path) else { return [] }
+        let keys: [URLResourceKey] = [.isRegularFileKey, .creationDateKey, .contentModificationDateKey,
+                                      .attributeModificationDateKey]
+        let files = try fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys,
+                                               options: [.skipsHiddenFiles])
+        var deleted: [String] = []
+        for url in files where !referenced.contains(url.lastPathComponent) {
+            guard let values = try? url.resourceValues(forKeys: Set(keys)), values.isRegularFile == true else { continue }
+            // Une copie garde souvent les dates de l'original : on retient la plus récente (dont le ctime, mis à jour à la copie).
+            let dates = [values.creationDate, values.contentModificationDate, values.attributeModificationDate].compactMap { $0 }
+            guard let newest = dates.max(), now.timeIntervalSince(newest) > age else { continue }
+            if (try? fm.removeItem(at: url)) != nil { deleted.append(url.lastPathComponent) }
+        }
+        return deleted.sorted()
+    }
 }
