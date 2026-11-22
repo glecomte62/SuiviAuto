@@ -78,6 +78,12 @@ struct SuiviAutoApp: App {
                 Divider()
                 Button("Exporter l'historique en CSV…") { BackupActions.exportCSV(container: container, appState: appState) }
             }
+            CommandGroup(replacing: .help) {
+                Button("Aide de SuiviAuto") { NSWorkspace.shared.open(HelpLinks.guide) }
+                    .keyboardShortcut("?", modifiers: .command)
+                Button("Signaler un problème ou proposer une idée…") { NSWorkspace.shared.open(HelpLinks.issues) }
+                Button("Télécharger la dernière version…") { NSWorkspace.shared.open(HelpLinks.releases) }
+            }
         }
     }
 }

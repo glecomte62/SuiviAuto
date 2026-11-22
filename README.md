@@ -1,5 +1,9 @@
 # SuiviAuto
 
+Créé par **Guillaume LECOMTE**.
+
+📖 **[Guide d'utilisation complet](docs/GUIDE.md)** · ⬇️ **[Télécharger la dernière version](https://github.com/glecomte62/SuiviAuto/releases/latest)**
+
 Suivi d'entretien de voitures pour macOS : interventions, factures et devis, contrôle technique, kilométrage, rappels.
 
 ## Commandes

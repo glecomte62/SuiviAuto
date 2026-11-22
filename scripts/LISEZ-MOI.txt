@@ -1,5 +1,6 @@
 SuiviAuto — suivi d'entretien de vos voitures
 ==============================================
+Créé par Guillaume LECOMTE
 
 Configuration requise : un Mac sous macOS 27 ou plus récent.
 
@@ -51,3 +52,9 @@ contrôle technique et ses dernières factures d'entretien (en choisissant
 la « Règle d'entretien » correspondante) : les échéances se recalculent.
 Si vous l'avez achetée d'occasion, cochez « Achetée d'occasion » et
 indiquez la date et le kilométrage d'achat.
+
+
+5. AIDE COMPLÈTE
+----------------
+Dans l'app : menu Aide > Aide de SuiviAuto (⌘?), ou directement :
+https://github.com/glecomte62/SuiviAuto/blob/main/docs/GUIDE.md
