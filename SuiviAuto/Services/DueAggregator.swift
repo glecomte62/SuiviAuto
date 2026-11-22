@@ -80,10 +80,11 @@ enum DueAggregator {
         }
 
         for deadline in car.deadlines {
-            let status = DueStatusEvaluator.status(dueDate: deadline.dueDate, remainingKm: nil, now: now, calendar: calendar)
+            let due = DeadlineScheduler.due(mode: deadline.mode, dueDate: deadline.dueDate, targetMileage: deadline.targetMileage,
+                                            estimator: estimator, now: now, calendar: calendar)
             result.append(DueItem(id: "deadline-\(deadline.uuid.uuidString)", carName: car.name, carColorHex: car.colorHex,
                                   label: deadline.label, detail: deadline.notes.isEmpty ? nil : deadline.notes,
-                                  dueDate: deadline.dueDate, dueKm: nil, status: status, source: .deadline))
+                                  dueDate: due.dueDate, dueKm: due.dueKm, status: due.status, source: .deadline))
         }
 
         return result.sorted(by: DueItem.byDate)

@@ -5,6 +5,7 @@ import SwiftData
 enum DeletionService {
     static func delete(_ car: Car, in context: ModelContext, store: DocumentStore = .shared) throws {
         let names = car.interventions.flatMap { $0.documents.map(\.fileName) }
+            + car.deadlines.flatMap { $0.documents.map(\.fileName) }
         context.delete(car)
         try saveOrRollback(context)
         names.forEach(store.delete(fileName:))
@@ -13,6 +14,13 @@ enum DeletionService {
     static func delete(_ intervention: Intervention, in context: ModelContext, store: DocumentStore = .shared) throws {
         let names = intervention.documents.map(\.fileName)
         context.delete(intervention)
+        try saveOrRollback(context)
+        names.forEach(store.delete(fileName:))
+    }
+
+    static func delete(_ deadline: Deadline, in context: ModelContext, store: DocumentStore = .shared) throws {
+        let names = deadline.documents.map(\.fileName)
+        context.delete(deadline)
         try saveOrRollback(context)
         names.forEach(store.delete(fileName:))
     }

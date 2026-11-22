@@ -29,8 +29,25 @@ final class Deadline {
     /// Échéance annuelle : avance d'un an et retourne true. Sinon retourne false (l'appelant la supprime).
     @discardableResult
     func markDone(calendar: Calendar = .current) -> Bool {
-        guard repeatsYearly else { return false }
-        dueDate = calendar.date(byAdding: .year, value: 1, to: dueDate)!
-        return true
+        complete(on: .now, mileage: nil, calendar: calendar) == .advanced
+    }
+}
+
+enum DeadlineCompletion: Equatable { case advanced, remove }
+
+extension Deadline {
+    /// Applique la validation de l'échéance. `.remove` : l'appelant supprime l'échéance.
+    func complete(on date: Date, mileage: Int?, calendar: Calendar = .current) -> DeadlineCompletion {
+        switch mode {
+        case .date:
+            guard repeatsYearly else { return .remove }
+            dueDate = calendar.date(byAdding: .year, value: 1, to: dueDate) ?? dueDate
+            return .advanced
+        case .km:
+            guard let interval = intervalKm, interval > 0 else { return .remove }
+            if let mileage { targetMileage = mileage + interval }
+            else { targetMileage = (targetMileage ?? 0) + interval }
+            return .advanced
+        }
     }
 }

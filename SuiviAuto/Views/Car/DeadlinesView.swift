@@ -72,13 +72,14 @@ struct DeadlinesView: View {
             try? await Task.sleep(for: .seconds(1))
             justDone.remove(id)
         }
-        if !d.markDone() { context.delete(d) }
-        do { try DeletionService.saveOrRollback(context) }
-        catch { appState.errorMessage = "Enregistrement impossible : \(error.localizedDescription)" }
+        do {
+            if d.markDone() { try DeletionService.saveOrRollback(context) }
+            else { try DeletionService.delete(d, in: context) }
+        } catch { appState.errorMessage = "Enregistrement impossible : \(error.localizedDescription)" }
     }
 
     private func remove(_ d: Deadline) {
-        do { try DeletionService.deleteRecord(d, in: context) }
+        do { try DeletionService.delete(d, in: context) }
         catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
     }
 }
