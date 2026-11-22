@@ -46,6 +46,11 @@ struct ReadingFormView: View {
         let r = OdometerReading(date: date, mileage: mileage ?? 0)
         context.insert(r)
         r.car = car
-        do { try context.save(); dismiss() } catch { errorMessage = error.localizedDescription }
+        do {
+            try DeletionService.saveOrRollback(context)
+            dismiss()
+        } catch {
+            errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
+        }
     }
 }

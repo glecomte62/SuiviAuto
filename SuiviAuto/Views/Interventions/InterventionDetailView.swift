@@ -29,7 +29,6 @@ struct InterventionDetailView: View {
         }
         .dropDestination(for: URL.self) { urls, _ in
             importFiles(urls)
-            return true
         } isTargeted: { dropTargeted = $0 }
         .overlay {
             if dropTargeted {
@@ -172,7 +171,10 @@ struct InterventionDetailView: View {
         catch { appState.errorMessage = error.localizedDescription }
     }
 
-    private func importFiles(_ urls: [URL]) {
+    /// Retourne true si au moins un fichier a été importé et enregistré.
+    @discardableResult
+    private func importFiles(_ urls: [URL]) -> Bool {
+        var imported: [String] = []
         var rejected: [String] = []
         for url in urls {
             let access = url.startAccessingSecurityScopedResource()
@@ -181,18 +183,29 @@ struct InterventionDetailView: View {
                 let doc = try DocumentStore.shared.importFile(at: url)
                 context.insert(doc)
                 doc.intervention = intervention
+                imported.append(doc.fileName)
             } catch {
-                rejected.append(url.lastPathComponent)
+                rejected.append(error.localizedDescription)
             }
         }
-        save()
-        if !rejected.isEmpty {
-            appState.errorMessage = "Non importé(s) : \(rejected.joined(separator: ", ")). Formats acceptés : PDF, JPEG, PNG, HEIC."
+        if !imported.isEmpty {
+            do {
+                try DeletionService.saveOrRollback(context)
+            } catch {
+                // Aucun fichier orphelin : les copies non référencées sont supprimées.
+                imported.forEach(DocumentStore.shared.delete(fileName:))
+                appState.errorMessage = "Import impossible : \(error.localizedDescription)"
+                return false
+            }
         }
+        if !rejected.isEmpty {
+            appState.errorMessage = "Non importé(s) :\n" + rejected.joined(separator: "\n")
+        }
+        return !imported.isEmpty
     }
 
     private func save() {
-        do { try context.save() }
-        catch { appState.errorMessage = error.localizedDescription }
+        do { try DeletionService.saveOrRollback(context) }
+        catch { appState.errorMessage = "Enregistrement impossible : \(error.localizedDescription)" }
     }
 }

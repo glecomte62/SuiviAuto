@@ -55,6 +55,11 @@ struct DeadlineFormView: View {
         target.dueDate = dueDate
         target.repeatsYearly = repeatsYearly
         target.notes = notes
-        do { try context.save(); dismiss() } catch { errorMessage = error.localizedDescription }
+        do {
+            try DeletionService.saveOrRollback(context)
+            dismiss()
+        } catch {
+            errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
+        }
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct DeadlinesView: View {
     let car: Car
     @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
     @State private var editing: Deadline?
     @State private var creating = false
 
@@ -28,7 +29,7 @@ struct DeadlinesView: View {
                 .onTapGesture(count: 2) { editing = d }
                 .contextMenu {
                     Button("Modifier") { editing = d }
-                    Button("Supprimer", role: .destructive) { context.delete(d); try? context.save() }
+                    Button("Supprimer", role: .destructive) { remove(d) }
                 }
             }
         }
@@ -48,6 +49,12 @@ struct DeadlinesView: View {
     /// Annuelle : avance d'un an. Ponctuelle : supprimée.
     private func markDone(_ d: Deadline) {
         if !d.markDone() { context.delete(d) }
-        try? context.save()
+        do { try DeletionService.saveOrRollback(context) }
+        catch { appState.errorMessage = "Enregistrement impossible : \(error.localizedDescription)" }
+    }
+
+    private func remove(_ d: Deadline) {
+        do { try DeletionService.deleteRecord(d, in: context) }
+        catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct RulesView: View {
     let car: Car
     @Environment(\.modelContext) private var context
+    @Environment(AppState.self) private var appState
     @State private var editingRule: MaintenanceRule?
     @State private var creating = false
 
@@ -27,10 +28,7 @@ struct RulesView: View {
                 .onTapGesture(count: 2) { editingRule = rule }
                 .contextMenu {
                     Button("Modifier") { editingRule = rule }
-                    Button("Supprimer", role: .destructive) {
-                        context.delete(rule)
-                        try? context.save()
-                    }
+                    Button("Supprimer", role: .destructive) { remove(rule) }
                 }
             }
         }
@@ -49,5 +47,10 @@ struct RulesView: View {
         }
         .sheet(item: $editingRule) { RuleFormView(car: car, rule: $0) }
         .sheet(isPresented: $creating) { RuleFormView(car: car, rule: nil) }
+    }
+
+    private func remove(_ rule: MaintenanceRule) {
+        do { try DeletionService.deleteRecord(rule, in: context) }
+        catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
     }
 }

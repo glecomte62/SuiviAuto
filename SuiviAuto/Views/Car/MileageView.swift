@@ -60,8 +60,7 @@ struct MileageView: View {
                                 Spacer()
                                 Text(Fmt.km(r.mileage)).monospacedDigit()
                                 Button(role: .destructive) {
-                                    context.delete(r)
-                                    try? context.save()
+                                    remove(r)
                                 } label: { Image(systemName: "trash") }
                                 .buttonStyle(.borderless)
                             }
@@ -72,5 +71,10 @@ struct MileageView: View {
             }
             .padding(14)
         }
+    }
+
+    private func remove(_ reading: OdometerReading) {
+        do { try DeletionService.deleteRecord(reading, in: context) }
+        catch { appState.errorMessage = "Suppression impossible : \(error.localizedDescription)" }
     }
 }

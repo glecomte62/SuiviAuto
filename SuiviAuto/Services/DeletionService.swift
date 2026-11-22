@@ -17,12 +17,19 @@ enum DeletionService {
         names.forEach(store.delete(fileName:))
     }
 
-    /// En cas d'échec, annule les suppressions en attente pour ne pas laisser le contexte incohérent.
-    private static func saveOrRollback(_ context: ModelContext) throws {
+    /// Enregistre ; en cas d'échec, annule toutes les modifications en attente pour ne pas laisser le contexte incohérent.
+    static func saveOrRollback(_ context: ModelContext) throws {
         do { try context.save() } catch {
             context.rollback()
             throw error
         }
+    }
+
+    /// Suppression d'un objet sans fichier associé (relevé, règle, échéance).
+    /// Nom distinct des surcharges ci-dessus pour ne jamais court-circuiter la suppression des fichiers.
+    static func deleteRecord(_ model: some PersistentModel, in context: ModelContext) throws {
+        context.delete(model)
+        try saveOrRollback(context)
     }
 
     static func delete(_ document: StoredDocument, in context: ModelContext, store: DocumentStore = .shared) throws {

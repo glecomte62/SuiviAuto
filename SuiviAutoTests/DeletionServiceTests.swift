@@ -55,4 +55,23 @@ final class DeletionServiceTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
         XCTAssertEqual(i.documents.count, 0)
     }
+
+    func testDeleteRecordRemovesPlainModel() throws {
+        let car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
+        ctx.insert(car)
+        let d = Deadline(label: "Assurance", dueDate: T.date("2027-01-01"), repeatsYearly: true)
+        ctx.insert(d); d.car = car
+        try ctx.save()
+        try DeletionService.deleteRecord(d, in: ctx)
+        XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<Deadline>()), 0)
+        XCTAssertEqual(car.deadlines.count, 0)
+    }
+
+    func testSaveOrRollbackPersistsChanges() throws {
+        let car = Car(name: "Clio", firstRegistrationDate: T.date("2020-01-01"))
+        ctx.insert(car)
+        try DeletionService.saveOrRollback(ctx)
+        XCTAssertFalse(ctx.hasChanges)
+        XCTAssertEqual(try ctx.fetchCount(FetchDescriptor<Car>()), 1)
+    }
 }

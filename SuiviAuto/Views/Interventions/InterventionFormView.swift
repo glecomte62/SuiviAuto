@@ -121,10 +121,10 @@ struct InterventionFormView: View {
         target.ctResult = kind == .controleTechnique ? ctResult : nil
         target.ruleKey = ruleKey.isEmpty ? nil : ruleKey
         do {
-            try context.save()
+            try DeletionService.saveOrRollback(context)
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Enregistrement impossible : \(error.localizedDescription)"
         }
     }
 }
