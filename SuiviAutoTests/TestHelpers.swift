@@ -1,4 +1,6 @@
 import Foundation
+import SwiftData
+@testable import SuiviAuto
 
 /// Outils de test : calendrier UTC fixe et fabrication de dates.
 enum T {
@@ -13,5 +15,14 @@ enum T {
     static func date(_ s: String, hour: Int = 0) -> Date {
         let p = s.split(separator: "-").map { Int($0)! }
         return calendar.date(from: DateComponents(year: p[0], month: p[1], day: p[2], hour: hour))!
+    }
+}
+
+extension T {
+    /// Contexte SwiftData en mémoire, isolé pour chaque test.
+    static func makeContext() throws -> ModelContext {
+        let container = try ModelContainer(for: Schema(SchemaModels.all),
+                                           configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        return ModelContext(container)
     }
 }
