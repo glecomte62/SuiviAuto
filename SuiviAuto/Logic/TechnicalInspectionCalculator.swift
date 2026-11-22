@@ -19,20 +19,26 @@ enum TechnicalInspectionCalculator {
         }
 
         var due = CTDue(dueDate: add(.year, 4, to: firstRegistration), isCounterVisit: false, drivingForbidden: false)
-        var pendingFailure: Date?
+        /// Date du CT initial défavorable dont la contre-visite est en attente.
+        var anchor: Date?
 
-        for record in records.sorted(by: { $0.date < $1.date }) {
+        // Tri par date ; le même jour, les échecs passent avant le favorable (ordre déterministe).
+        let sorted = records.sorted {
+            if $0.date != $1.date { return $0.date < $1.date }
+            return $0.result != .favorable && $1.result == .favorable
+        }
+
+        for record in sorted {
+            let withinWindow = anchor.map { record.date <= add(.month, 2, to: $0) } ?? false
             switch record.result {
             case .favorable:
-                var base = record.date
-                if let failure = pendingFailure, record.date <= add(.month, 2, to: failure) {
-                    base = failure
-                }
+                let base = withinWindow ? anchor! : record.date
                 due = CTDue(dueDate: add(.year, 2, to: base), isCounterVisit: false, drivingForbidden: false)
-                pendingFailure = nil
+                anchor = nil
             case .defavorable, .critique:
-                if pendingFailure == nil { pendingFailure = record.date }
-                due = CTDue(dueDate: add(.month, 2, to: record.date),
+                // Contre-visite défavorable dans les 2 mois : on garde le CT initial ; sinon nouveau cycle.
+                if !withinWindow { anchor = record.date }
+                due = CTDue(dueDate: add(.month, 2, to: anchor!),
                             isCounterVisit: true,
                             drivingForbidden: record.result == .critique)
             }

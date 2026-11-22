@@ -96,6 +96,7 @@ Calcule la prochaine échéance du contrôle technique à partir de `firstRegist
 - Dernier CT défavorable ou critique : contre-visite = date de ce CT + 2 mois.
   Pour le résultat « critique », la voiture ne peut plus circuler après le jour même. L'app l'affiche, mais l'échéance calculée reste + 2 mois.
 - Une contre-visite favorable (CT favorable moins de 2 mois après un CT défavorable) prolonge de 2 ans **à partir de la date du CT initial défavorable**.
+- Contre-visite défavorable dans les 2 mois : l'échéance reste 2 mois après le CT initial.
 
 ### MileageEstimator
 - Prend en entrée tous les points (date, km) : relevés et interventions facturées.

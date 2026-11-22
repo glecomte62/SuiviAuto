@@ -51,4 +51,39 @@ final class TechnicalInspectionTests: XCTestCase {
         ])
         XCTAssertEqual(d.dueDate, T.date("2028-03-01"))
     }
+
+    func testStaleFailureDoesNotAnchorLaterCycle() {
+        let d = due([
+            CTRecord(date: T.date("2024-03-10"), result: .defavorable),
+            CTRecord(date: T.date("2024-09-10"), result: .defavorable),
+            CTRecord(date: T.date("2024-10-01"), result: .favorable),
+        ])
+        XCTAssertEqual(d, CTDue(dueDate: T.date("2026-09-10"), isCounterVisit: false, drivingForbidden: false))
+    }
+
+    func testFailedCounterVisitKeepsInitialAnchor() {
+        let fails = [
+            CTRecord(date: T.date("2024-03-10"), result: .defavorable),
+            CTRecord(date: T.date("2024-04-01"), result: .critique),
+        ]
+        XCTAssertEqual(due(fails), CTDue(dueDate: T.date("2024-05-10"), isCounterVisit: true, drivingForbidden: true))
+        let d = due(fails + [CTRecord(date: T.date("2024-05-01"), result: .favorable)])
+        XCTAssertEqual(d, CTDue(dueDate: T.date("2026-03-10"), isCounterVisit: false, drivingForbidden: false))
+    }
+
+    func testCounterVisitExactlyTwoMonthsLater() {
+        let d = due([
+            CTRecord(date: T.date("2024-03-10"), result: .defavorable),
+            CTRecord(date: T.date("2024-05-10"), result: .favorable),
+        ])
+        XCTAssertEqual(d.dueDate, T.date("2026-03-10"))
+    }
+
+    func testSameDayFailureThenFavorableInAnyOrder() {
+        let fail = CTRecord(date: T.date("2024-03-10"), result: .defavorable)
+        let ok = CTRecord(date: T.date("2024-03-10"), result: .favorable)
+        let expected = CTDue(dueDate: T.date("2026-03-10"), isCounterVisit: false, drivingForbidden: false)
+        XCTAssertEqual(due([fail, ok]), expected)
+        XCTAssertEqual(due([ok, fail]), expected)
+    }
 }
