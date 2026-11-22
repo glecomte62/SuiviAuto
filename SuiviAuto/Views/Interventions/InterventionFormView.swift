@@ -1,18 +1,27 @@
 import SwiftData
 import SwiftUI
 
+/// Choix du garage dans le formulaire.
+enum GarageChoice: Hashable {
+    case none
+    case legacyText          // ancien nom texte non converti, conservé tel quel
+    case garage(Garage)
+}
+
 struct InterventionFormView: View {
     let car: Car
     let intervention: Intervention?
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Query private var garages: [Garage]
 
     @State private var date = Date.now
     @State private var mileageText = ""
     @State private var kind: InterventionKind = .entretien
     @State private var title = ""
-    @State private var garage = ""
+    @State private var garageChoice: GarageChoice = .none
+    @State private var creatingGarage = false
     @State private var amountText = ""
     @State private var status: InterventionStatus = .facture
     @State private var notes = ""
@@ -44,7 +53,18 @@ struct InterventionFormView: View {
                     TextField("Titre", text: $title, prompt: Text("ex. Vidange + filtres"))
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                     TextField("Kilométrage", text: $mileageText, prompt: Text(lastKnown.map { "dernier : \(Fmt.km($0))" } ?? "km"))
-                    TextField("Garage", text: $garage)
+                    HStack {
+                        Picker("Garage", selection: $garageChoice) {
+                            Text("Aucun").tag(GarageChoice.none)
+                            if let legacy = intervention?.garage, intervention?.garageRef == nil,
+                               !Garage.cleanedName(legacy).isEmpty {
+                                Text("\(Garage.cleanedName(legacy)) (texte)").tag(GarageChoice.legacyText)
+                            }
+                            Divider()
+                            ForEach(GarageService.sorted(garages)) { Text($0.name).tag(GarageChoice.garage($0)) }
+                        }
+                        Button("Nouveau garage…") { creatingGarage = true }
+                    }
                     TextField("Montant (€)", text: $amountText, prompt: Text("ex. 189,90"))
                 }
                 Section {
@@ -82,11 +102,20 @@ struct InterventionFormView: View {
         .alert("Erreur", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(errorMessage ?? "") }
+        .sheet(isPresented: $creatingGarage) {
+            GarageFormView(garage: nil) { newGarage in garageChoice = .garage(newGarage) }
+                .tracksSheetPresentation()
+        }
     }
 
     private func load() {
         guard let i = intervention else { return }
-        date = i.date; mileageText = String(i.mileage); kind = i.kind; title = i.title; garage = i.garage
+        date = i.date; mileageText = String(i.mileage); kind = i.kind; title = i.title
+        if let linked = i.garageRef {
+            garageChoice = .garage(linked)
+        } else if !Garage.cleanedName(i.garage).isEmpty {
+            garageChoice = .legacyText
+        }
         amountText = i.amountCents.map(Money.editString(cents:)) ?? ""
         status = i.status; notes = i.notes; ctResult = i.ctResult ?? .favorable; ruleKey = i.ruleKey ?? ""
         // Règle supprimée entre-temps : on évite une sélection invalide dans le Picker.
@@ -119,7 +148,17 @@ struct InterventionFormView: View {
         target.mileage = mileage ?? 0
         target.kind = kind
         target.title = title.trimmingCharacters(in: .whitespaces)
-        target.garage = garage.trimmingCharacters(in: .whitespaces)
+        switch garageChoice {
+        case .none:
+            target.garageRef = nil
+            target.garage = ""
+            target.garageTextMigrated = true
+        case .legacyText:
+            break // texte conservé tel quel
+        case .garage(let chosen):
+            target.garageRef = chosen
+            target.garageTextMigrated = true
+        }
         target.amountCents = Money.parse(amountText)
         target.status = status
         target.notes = notes

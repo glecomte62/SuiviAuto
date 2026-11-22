@@ -15,7 +15,7 @@ struct InterventionListView: View {
                     || i.title.localizedCaseInsensitiveContains(search)
                     || i.displayTitle.localizedCaseInsensitiveContains(search)
                     || i.kind.label.localizedCaseInsensitiveContains(search)
-                    || i.garage.localizedCaseInsensitiveContains(search)
+                    || i.garageDisplayName.localizedCaseInsensitiveContains(search)
                     || i.notes.localizedCaseInsensitiveContains(search))
             }
             .sorted { ($0.date, $0.mileage) > ($1.date, $1.mileage) }
