@@ -28,7 +28,7 @@ Prérequis : Xcode 27+, `brew install xcodegen`.
 
 ## Raccourcis
 
-⇧⌘N nouvelle voiture · ⌘N nouvelle intervention · ⌘K relevé km · Espace : Coup d'œil sur un document
+⇧⌘N nouvelle voiture · ⌘N nouvelle intervention · ⌘K relevé km · ⌥⌘N nouveau garage · Espace : Coup d'œil sur un document
 
 ## Un problème, une idée ?
 

@@ -17,12 +17,13 @@ SuiviAuto vous aide à suivre l'entretien de vos voitures sur Mac. Vous y rangez
 7. [Les règles d'entretien](#7-les-règles-dentretien)
 8. [Le contrôle technique](#8-le-contrôle-technique)
 9. [Les échéances libres (assurance, pneus…)](#9-les-échéances-libres-assurance-pneus)
-10. [Le tableau de bord](#10-le-tableau-de-bord)
-11. [Les rappels (notifications)](#11-les-rappels-notifications)
-12. [Sauvegarder, restaurer, exporter](#12-sauvegarder-restaurer-exporter)
-13. [Raccourcis clavier](#13-raccourcis-clavier)
-14. [Questions fréquentes et dépannage](#14-questions-fréquentes-et-dépannage)
-15. [Signaler un problème, proposer une idée](#15-signaler-un-problème-proposer-une-idée)
+10. [Les garages et leurs contacts](#10-les-garages-et-leurs-contacts)
+11. [Le tableau de bord](#11-le-tableau-de-bord)
+12. [Les rappels (notifications)](#12-les-rappels-notifications)
+13. [Sauvegarder, restaurer, exporter](#13-sauvegarder-restaurer-exporter)
+14. [Raccourcis clavier](#14-raccourcis-clavier)
+15. [Questions fréquentes et dépannage](#15-questions-fréquentes-et-dépannage)
+16. [Signaler un problème, proposer une idée](#16-signaler-un-problème-proposer-une-idée)
 
 ---
 
@@ -57,9 +58,9 @@ La fenêtre est divisée en **trois colonnes** :
 
 | Colonne | Contenu |
 |---|---|
-| **À gauche** (barre latérale) | **Tableau de bord** en haut, puis **Mes voitures**. Chaque voiture a sa photo ou sa pastille de couleur. Une icône orange ⏰ ou rouge ⚠️ signale une échéance proche ou dépassée. Le bouton **+** ajoute une voiture. |
-| **Au milieu** | Le contenu de la voiture choisie, réparti en onglets : **Interventions · Km · Règles · Échéances · Infos**. Pour le tableau de bord : la liste des prochaines échéances. |
-| **À droite** (détail) | La fiche de l'intervention sélectionnée. Si aucune intervention n'est sélectionnée : le résumé de la voiture. Pour le tableau de bord : les graphiques. |
+| **À gauche** (barre latérale) | **Tableau de bord** en haut, puis **Mes voitures**, puis **Garages**. Chaque voiture a sa photo ou sa pastille de couleur. Une icône orange ⏰ ou rouge ⚠️ signale une échéance proche ou dépassée. Le bouton **+** ajoute une voiture ; le **+** de la section **Garages** ajoute un garage (voir [§ 10](#10-les-garages-et-leurs-contacts)). |
+| **Au milieu** | Le contenu de la voiture choisie, réparti en onglets : **Interventions · Km · Règles · Échéances · Infos**. Pour le tableau de bord : la liste des prochaines échéances. Pour un garage : sa fiche. |
+| **À droite** (détail) | La fiche de l'intervention sélectionnée. Si aucune intervention n'est sélectionnée : le résumé de la voiture. Pour le tableau de bord : les graphiques. Pour un garage : son historique. |
 
 ### Les couleurs des badges
 
@@ -95,7 +96,7 @@ Cliquez sur **Enregistrer**. La voiture apparaît dans la barre latérale.
 
 Onglet **Infos** de la voiture :
 - **Modifier** rouvre le formulaire.
-- **Supprimer la voiture** efface, après confirmation, la voiture **et tout son historique** : interventions, factures, relevés, règles et échéances. Pensez à [faire une sauvegarde](#12-sauvegarder-restaurer-exporter) avant.
+- **Supprimer la voiture** efface, après confirmation, la voiture **et tout son historique** : interventions, factures, relevés, règles et échéances. Pensez à [faire une sauvegarde](#13-sauvegarder-restaurer-exporter) avant.
 
 ---
 
@@ -114,7 +115,7 @@ Sélectionnez la voiture, puis **⌘N** (ou le bouton **+** de l'onglet **Interv
 | **Titre** | Ex. « Vidange + filtres ». Si vide, le type est affiché. |
 | **Date** | Date de l'intervention. |
 | **Kilométrage** *(obligatoire)* | Le km au compteur ce jour-là. Le dernier km connu est rappelé en grisé. |
-| **Garage** | Facultatif. |
+| **Garage** | Menu de vos garages, ou **Nouveau garage…** pour en créer un sans quitter le formulaire (voir [§ 10](#10-les-garages-et-leurs-contacts)). |
 | **Montant (€)** | Ex. `189,90`. Virgule ou point acceptés. |
 | **Résultat du CT** | Apparaît seulement pour un contrôle technique : Favorable, Défavorable (contre-visite) ou Défaillance critique. |
 | **Règle d'entretien** | Relie l'intervention à une règle (vidange, courroie…) pour que la prochaine échéance se recalcule. **Pensez-y pour chaque entretien périodique !** |
@@ -164,7 +165,7 @@ Le fichier est **copié** dans SuiviAuto : vous pouvez supprimer ou déplacer l'
 - **Double-clic** : ouvre le document dans l'application par défaut (Aperçu, en général).
 - **Clic droit** : Coup d'œil, Ouvrir, **Afficher dans le Finder**, Supprimer.
 
-Une vignette **« Fichier introuvable »** signifie que le fichier a disparu du dossier de SuiviAuto (voir [§ 14](#14-questions-fréquentes-et-dépannage)).
+Une vignette **« Fichier introuvable »** signifie que le fichier a disparu du dossier de SuiviAuto (voir [§ 14](#15-questions-fréquentes-et-dépannage)).
 
 ---
 
@@ -256,7 +257,84 @@ Quand c'est fait, cliquez sur **Fait ✓** :
 
 ---
 
-## 10. Le tableau de bord
+## 10. Les garages et leurs contacts
+
+SuiviAuto garde une **fiche par garage** : coordonnées, horaires, votre avis, les personnes à contacter et tout ce que vous y avez fait faire, **toutes voitures confondues**.
+
+### Créer un garage
+
+- Cliquez sur le **+** de la section **Garages** (barre latérale), ou
+- utilisez **⌥⌘N** (menu Fichier > **Nouveau garage**), ou
+- depuis le formulaire d'une intervention, choisissez **Nouveau garage…** (voir plus bas).
+
+| Champ | Utilité |
+|---|---|
+| **Nom** *(obligatoire)* | Ex. « Garage du Nord ». Un avertissement s'affiche si un garage porte déjà ce nom. |
+| **Adresse, Téléphone, E-mail, Site web** | Les coordonnées. Chacune devient un bouton d'action dans la fiche. |
+| **Horaires** | Ex. « Lun-ven 8h-12h / 14h-18h ». |
+| **Spécialités / marques** | Ex. « Renault, pneus, carrosserie ». |
+| **Note** | De 1 à 5 étoiles. **Cliquez à nouveau sur l'étoile sélectionnée** pour remettre la note à 0. |
+| **Avis** | Votre ressenti : accueil, prix, délais… |
+
+Dans la barre latérale, les étoiles sont **en lecture seule** : elles s'affichent sous le nom du garage avec le nombre de contacts. Pour changer la note, ouvrez la fiche et cliquez sur les étoiles.
+
+### La fiche d'un garage
+
+Cliquez sur un garage dans la barre latérale. La barre d'outils propose **Modifier** et **Supprimer**. La carte **Coordonnées** donne un bouton par information :
+
+| Bouton | Effet |
+|---|---|
+| **Itinéraire** | Ouvre l'adresse dans **Plans**. |
+| **Appeler** | Lance l'appel via votre **iPhone** ou **FaceTime** (Continuité). |
+| **Écrire** | Ouvre un nouveau message dans votre application de mail. |
+| **Site web** | Ouvre le site dans votre navigateur. |
+
+**Clic droit** sur une ligne > **Copier** pour copier l'adresse, le numéro, l'e-mail ou le site.
+
+### Les contacts du garage
+
+La carte **Contacts** liste les personnes que vous connaissez sur place : réception, chef d'atelier, votre mécanicien…
+
+- **Nouveau contact** ajoute une personne. Champs : **Nom** *(obligatoire)*, **Fonction** (tapez-la, ou choisissez-en une dans le menu de suggestions à côté du champ), **Téléphone direct**, **Portable**, **E-mail**, **Notes**.
+- Les boutons 📞 (téléphone direct), 📱 (portable) et ✉️ de chaque contact appellent ou écrivent directement.
+- **Modifier** : **double-clic** sur le contact, menu **…** à droite de sa ligne > **Modifier**, ou clic droit > **Modifier**.
+- **Supprimer** : menu **…** > **Supprimer**, ou clic droit > **Supprimer** (après confirmation).
+- **Copier** : clic droit > **Copier le téléphone**, **Copier le portable** ou **Copier l'e-mail**.
+
+### L'historique du garage
+
+La colonne de droite montre le nombre d'**Interventions**, le **Total des factures** et l'**Historique** : chaque intervention faite dans ce garage, avec sa voiture, sa date, son kilométrage et son montant, **toutes voitures confondues**. Les **devis** y figurent (pastille violette) mais **ne comptent pas** dans le total.
+
+### Choisir le garage d'une intervention
+
+Dans le formulaire d'une intervention, le menu **Garage** propose :
+
+1. **Aucun** ;
+2. si l'intervention porte un ancien nom de garage non converti : `<nom> (texte)` ;
+3. la liste de vos garages.
+
+Le bouton **Nouveau garage…** à côté du menu crée un garage sans quitter le formulaire ; il est alors choisi automatiquement. La recherche des interventions tient compte du nom du garage, et l'export CSV l'indique aussi.
+
+### Mise à jour depuis la 1.0
+
+Dans la 1.0, le garage était un simple texte. Au **premier lancement de la 1.1**, SuiviAuto :
+
+- fait d'abord une **copie de sécurité** de vos données dans `~/Library/Application Support/SuiviAuto-avant-1.1-<date>` ;
+- **convertit automatiquement** les noms de garage déjà saisis en fiches, et **regroupe** les variantes de casse, d'espaces et d'accents (« Garage Martin » et « garage  martín » deviennent une seule fiche, qui garde la première graphie rencontrée) ;
+- relie chaque intervention à sa fiche, sans rien perdre.
+
+Il ne reste plus qu'à compléter les fiches (adresse, téléphone, contacts…) quand vous en avez besoin.
+
+### Supprimer un garage
+
+**Supprimer** dans la barre d'outils de la fiche, puis **Supprimer le garage** après confirmation (le message indique le nombre d'interventions et de contacts concernés) :
+
+- les **interventions sont conservées** et gardent le **nom** du garage, en simple texte ;
+- les **contacts** du garage sont **supprimés**.
+
+---
+
+## 11. Le tableau de bord
 
 Cliquez sur **Tableau de bord** en haut de la barre latérale.
 
@@ -270,7 +348,7 @@ Le **résumé d'une voiture** (colonne de droite quand aucune intervention n'est
 
 ---
 
-## 11. Les rappels (notifications)
+## 12. Les rappels (notifications)
 
 SuiviAuto vous prévient **30 jours** puis **7 jours** avant chaque échéance datée, à **9 h** du matin : contrôle technique, règles d'entretien, échéances libres. Pour les règles en kilomètres, c'est la date **estimée** qui sert.
 
@@ -283,7 +361,7 @@ Les rappels sont recalculés à chaque modification, et à chaque ouverture de l
 
 ---
 
-## 12. Sauvegarder, restaurer, exporter
+## 13. Sauvegarder, restaurer, exporter
 
 Vos données (base et documents) sont dans `~/Library/Application Support/SuiviAuto/`. **Time Machine** les sauvegarde automatiquement. Vous pouvez aussi faire des sauvegardes manuelles, par exemple avant de changer de Mac.
 
@@ -299,6 +377,10 @@ Menu **Fichier > Importer une sauvegarde…**, choisissez le `.zip`, puis confir
 - Par sécurité, vos données d'avant sont **conservées** dans un dossier `SuiviAuto-avant-restauration-<date>` (dans `~/Library/Application Support/`). Vous pourrez le supprimer quand tout vous semble correct.
 - Une sauvegarde abîmée ou qui ne vient pas de SuiviAuto est refusée, sans toucher à vos données.
 
+### Copie de sécurité lors du passage à la 1.1
+
+Au premier lancement de la 1.1, si vos données viennent de la 1.0, SuiviAuto en fait d'abord une copie dans `~/Library/Application Support/SuiviAuto-avant-1.1-<date>`, **avant** de les convertir. Vous pourrez la supprimer quand tout vous semble correct.
+
 ### Exporter l'historique en CSV
 
 Menu **Fichier > Exporter l'historique en CSV…** : un tableau (voiture, date, km, type, titre, garage, montant, statut) qui s'ouvre directement dans **Excel** ou **Numbers**.
@@ -311,15 +393,16 @@ Menu **Fichier > Exporter l'historique en CSV…** : un tableau (voiture, date, 
 
 ---
 
-## 13. Raccourcis clavier
+## 14. Raccourcis clavier
 
 | Raccourci | Action |
 |---|---|
 | **⇧⌘N** | Nouvelle voiture |
 | **⌘N** | Nouvelle intervention (voiture sélectionnée) |
 | **⌘K** | Nouveau relevé kilométrique (voiture sélectionnée) |
+| **⌥⌘N** | Nouveau garage |
 | **Espace** | Coup d'œil sur le document sélectionné |
-| **Double-clic** | Ouvrir un document · modifier une règle ou une échéance |
+| **Double-clic** | Ouvrir un document · modifier une règle, une échéance ou un contact |
 | **Entrée** | Enregistrer un formulaire |
 | **Échap** | Annuler un formulaire |
 | **⌘?** | Ouvrir cette aide |
@@ -327,7 +410,7 @@ Menu **Fichier > Exporter l'historique en CSV…** : un tableau (voiture, date, 
 
 ---
 
-## 14. Questions fréquentes et dépannage
+## 15. Questions fréquentes et dépannage
 
 **Toutes les échéances de ma voiture sont rouges juste après l'avoir ajoutée.**
 C'est normal pour une voiture qui roule déjà : l'app ne connaît pas encore son historique. Saisissez le **dernier contrôle technique** et les **derniers entretiens** (en factures, avec la bonne **Règle d'entretien**). Si vous l'avez achetée d'occasion, cochez **Achetée d'occasion** dans l'onglet **Infos > Modifier**.
@@ -356,12 +439,15 @@ Voir [Première ouverture](#première-ouverture).
 **L'app affiche « Impossible d'ouvrir la base de données ».**
 Le message indique où se trouve la base et, s'il en existe une, la copie de vos données précédentes. Signalez le problème (voir ci-dessous) en joignant ce message : ne supprimez rien.
 
+**Mes anciens noms de garage ont-ils été conservés ? Il y a un garage en double.**
+Au premier lancement de la 1.1, les noms déjà saisis ont été convertis en fiches, et les variantes de casse, d'espaces et d'accents (« Garage Martin », « garage  martin », « Garage Martín ») regroupées en une seule fiche. Si deux garages vous semblent identiques malgré tout, ouvrez l'intervention concernée, choisissez le bon garage dans le menu **Garage** et supprimez la fiche en trop. Un nom qui n'a pas pu être converti apparaît dans le menu sous la forme `<nom> (texte)` : choisissezsez simplement un garage de la liste pour le remplacer.
+
 **Désinstaller SuiviAuto.**
 Mettez l'app à la corbeille depuis Applications. Pour effacer aussi vos données (définitivement !), supprimez le dossier `~/Library/Application Support/SuiviAuto/`. Pour y accéder : dans le Finder, menu **Aller > Aller au dossier…** (⇧⌘G) et collez ce chemin.
 
 ---
 
-## 15. Signaler un problème, proposer une idée
+## 16. Signaler un problème, proposer une idée
 
 Rendez-vous sur la [page de suivi](https://github.com/glecomte62/SuiviAuto/issues/new/choose) (menu **Aide > Signaler un problème ou proposer une idée…** dans l'app) et choisissez **Signaler un problème** ou **Proposer une idée**.
 
